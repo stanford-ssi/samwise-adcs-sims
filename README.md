@@ -1,5 +1,6 @@
 # SAMWISE ADCS sims
 *(ADCS = Attitude Determination and Control System)*
+
 6DOF python simulation for validating SAMWISE ADCS
 
 > [!NOTE]
