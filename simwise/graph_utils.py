@@ -1,6 +1,60 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+import matplotlib.pyplot as plt
+
+def graph_vector_matplotlib(t_arr, y, name1="x", name2="y", name3="z"):
+    fig, axs = plt.subplots(3, 1, figsize=(8, 10))
+
+    axs[0].plot(t_arr, y[:, 0], color='b', label=name1)
+    axs[0].set_xlabel('t')
+    axs[0].set_ylabel(name1)
+    axs[0].legend()
+    axs[0].grid()
+
+    axs[1].plot(t_arr, y[:, 1], color='b', label=name2)
+    axs[1].set_xlabel('t')
+    axs[1].set_ylabel(name2)
+    axs[1].legend()
+    axs[1].grid()
+
+    axs[2].plot(t_arr, y[:, 2], color='b', label=name3)
+    axs[2].set_xlabel('t')
+    axs[2].set_ylabel(name3)
+    axs[2].legend()
+    axs[2].grid()
+
+    plt.show()
+
+
+def graph_quaternion_matplotlib(t_arr, y):
+    fig, axs = plt.subplots(4, 1, figsize=(8, 10))
+
+    axs[0].plot(t_arr, y[:, 0], color='b', label='w')
+    axs[0].set_xlabel('t')
+    axs[0].set_ylabel('w')
+    axs[0].legend()
+    axs[0].grid()
+
+    axs[1].plot(t_arr, y[:, 1], color='b', label='x')
+    axs[1].set_xlabel('t')
+    axs[1].set_ylabel('x')
+    axs[1].legend()
+    axs[1].grid()
+
+    axs[2].plot(t_arr, y[:, 2], color='b', label='y')
+    axs[2].set_xlabel('t')
+    axs[2].set_ylabel('y')
+    axs[2].legend()
+    axs[2].grid()
+
+    axs[3].plot(t_arr, y[:, 3], color='b', label='z')
+    axs[3].set_xlabel('t')
+    axs[3].set_ylabel('z')
+    axs[3].legend()
+    axs[3].grid()
+    plt.show()
+
 def graph_euler(t_arr, y):
     fig = make_subplots(rows=3, cols=1)
     fig.append_trace(go.Scatter(
