@@ -3,6 +3,7 @@ from scipy.integrate import solve_ivp
 from simwise.quaternion import quaternion2euler, quaternion_dynamics, compute_control_torque, angle_axis_between
 from simwise.graph_utils import graph_euler, graph_vector_matplotlib, graph_quaternion, graph_quaternion_matplotlib
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 if __name__ == "__main__":
     # Initial conditions
@@ -21,7 +22,7 @@ if __name__ == "__main__":
 
     # Control coefficients
     K_p = 1
-    K_d = 10
+    K_d = 2
 
     # Noise parameter (standard deviation of gaussian) [Nm]
     tau_noise = 0.00000288
@@ -40,7 +41,8 @@ if __name__ == "__main__":
     e_angles = np.zeros((num_points, 3))
     quaternions = np.zeros((num_points, 4))
 
-    for i in range(num_points):
+    print("Simulating...")
+    for i in tqdm(range(num_points)):
         t = t_arr[i]
 
         f = lambda t, x: quaternion_dynamics(x, dt, inertia, compute_control_torque(x, x_d, K_p, K_d, tau_max=tau_max), noise=tau_noise)

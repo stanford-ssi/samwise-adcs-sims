@@ -3,6 +3,16 @@
 
 6DOF python simulation for validating SAMWISE ADCS
 
+To install the contents of this repo as a python package run:
+```
+pip3 install .
+```
+
+To run the code:
+```
+python3 simwise/simulation.py
+```
+
 > [!NOTE]
 > See the rust code for the actual board here:
 > https://github.com/polygnomial/adcs
