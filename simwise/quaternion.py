@@ -1,12 +1,15 @@
 import numpy as np
 
 def normalize_quaternion(q):
-    """Normalize a quaternion.
+    """Normalize a quaternion and force scalar positive.
 
     Args:
         q (np.ndarray): quaternion of form [q1, q2, q3, q4]
     """
-    return q / np.linalg.norm(q)
+    q_normalized =  q / np.linalg.norm(q)
+    # print(q_normalized, -q_normalized if q_normalized[0] < 0 else q_normalized)
+    #  if q_normalized[0] < 0: q_normalized *= -1
+    return q_normalized
 
 def quaternion_multiply(q1, q2):
     """
@@ -81,8 +84,8 @@ def quaternion_dynamics(x, dt, inertia, tau, noise=0):
     """
 
     # Add random noise
-    noise_torque = np.random.normal(np.zeros(3), noise)
-    tau += noise_torque
+    # noise_torque = np.random.normal(np.zeros(3), noise)
+    # tau += noise_torque
 
     Q = normalize_quaternion(x[:4])
     Ω = x[4:]
@@ -123,10 +126,18 @@ def angle_axis_between(q1, q2):
 
     theta = 2 * np.arccos(q_1_to_2[0])
 
+    # Wrap to be between 0 and pi
+    if theta > np.pi:
+        theta = theta - 2 * np.pi
+
     if np.abs(theta) < 0.00001:
         return theta, np.zeros(3)
     
     rotation_vector = q_1_to_2[1:] / np.sin(theta / 2)
+
+    # TODO - not sure if this works!
+    # if np.abs(theta - np.pi) < 0.1:
+    #     rotation_vector = np.array([1, 0, 0])
 
     return theta, rotation_vector
 

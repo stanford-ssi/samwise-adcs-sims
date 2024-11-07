@@ -1,14 +1,14 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from simwise.quaternion import quaternion2euler, quaternion_dynamics, compute_control_torque, angle_axis_between
-from simwise.graph_utils import graph_euler, graph_vector_matplotlib, graph_quaternion, graph_quaternion_matplotlib
+from quaternion import quaternion2euler, quaternion_dynamics, compute_control_torque, angle_axis_between
+from graph_utils import graph_euler, graph_vector_matplotlib, graph_quaternion, graph_quaternion_matplotlib
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 if __name__ == "__main__":
     # Initial conditions
     q = np.array([1, 0, 0, 0])
-    Ω = np.array([0.01, 0.7, 0.2]) # [rad/s]
+    Ω = np.array([0.0, 0.0, 0.1]) # [rad/s]
     x0 = np.concatenate((q, Ω))
     
     # Desired state
@@ -21,8 +21,8 @@ if __name__ == "__main__":
     inertia = np.array([0.01461922201, 0.0412768466, 0.03235309961])
 
     # Control coefficients
-    K_p = 1
-    K_d = 2
+    K_p = 0.0005
+    K_d = 0.005
 
     # Noise parameter (standard deviation of gaussian) [Nm]
     tau_noise = 0.00000288
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     tau_max = 0.0032
 
     dt = 1/60 # [sec]
-    t_end = 10.47 * 60 # [sec] 10 minutes
+    t_end = 10 * 60 # [sec] 2 minutes
     epoch = 0
     num_points = int(t_end // dt)
 
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     x = x0
     e_angles = np.zeros((num_points, 3))
     quaternions = np.zeros((num_points, 4))
+    omegas = np.zeros((num_points, 3))
 
     print("Simulating...")
     for i in tqdm(range(num_points)):
@@ -51,12 +52,20 @@ if __name__ == "__main__":
         x = y[i]
         e_angles[i] = quaternion2euler(y[i, :4])
         quaternions[i] = y[i, :4]
+        omegas[i] = y[i, 4:]
 
     # Back compute values from simulation results
-    thetas = [angle_axis_between(quaternions[i], q_d)[0] for i in range(num_points)]
+    theta_err = [angle_axis_between(quaternions[i], q_d)[0] for i in range(num_points)]
     axis = np.array([angle_axis_between(quaternions[i], q_d)[1] for i in range(num_points)])
     torques = np.array([compute_control_torque(y[i], x_d, K_p, K_d) for i in range(num_points)])
 
     # Plot results
+    plt.plot(t_arr, theta_err, "r")
+    plt.xlabel("Time")
+    plt.ylabel("Error angle (rad)")
+    plt.show()
+
     graph_quaternion_matplotlib(t_arr, quaternions)
-    graph_vector_matplotlib(t_arr, torques)
+    graph_vector_matplotlib(t_arr, torques, "torque x", "torque y", "torque z")
+    # graph_vector_matplotlib(t_arr, axis, "error axis x", "error axis y", "error axis z")
+    graph_vector_matplotlib(t_arr, omegas, "wx", "wy", "wz")
