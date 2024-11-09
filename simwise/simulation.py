@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from quaternion import quaternion2euler, quaternion_dynamics, compute_control_torque, angle_axis_between
+from quaternion import quaternion2euler, quaternion_dynamics, compute_control_torque, angle_axis_between, compute_control_torque_lqr
 from graph_utils import graph_euler, graph_vector_matplotlib, graph_quaternion, graph_quaternion_matplotlib
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -8,7 +8,7 @@ from tqdm import tqdm
 if __name__ == "__main__":
     # Initial conditions
     q = np.array([1, 0, 0, 0])
-    Ω = np.array([0.0, 0.0, 0.1]) # [rad/s]
+    Ω = np.array([0.1, 0.1, 0.1]) # [rad/s]
     x0 = np.concatenate((q, Ω))
     
     # Desired state
@@ -24,15 +24,20 @@ if __name__ == "__main__":
     K_p = 0.0005
     K_d = 0.005
 
+    # LQR weighting matrices
+    Q=np.diag([1,1,1,1,1,1,1])
+    R=np.diag([1,1,1])
+
     # Noise parameter (standard deviation of gaussian) [Nm]
     tau_noise = 0.00000288
 
     # Maximum actuator torque [Nm]
     tau_max = 0.0032
 
-    dt = 1/60 # [sec]
-    t_end = 10 * 60 # [sec] 2 minutes
+    dt = 1 # [sec]
+    t_end = 5 * 60 # [sec] --> minutes
     epoch = 0
+
     num_points = int(t_end // dt)
 
     y = np.zeros((num_points, 7))
@@ -46,8 +51,9 @@ if __name__ == "__main__":
     for i in tqdm(range(num_points)):
         t = t_arr[i]
 
-        f = lambda t, x: quaternion_dynamics(x, dt, inertia, compute_control_torque(x, x_d, K_p, K_d, tau_max=tau_max), noise=tau_noise)
-        sol = solve_ivp(f, [t, t+dt], x, method='RK45')
+        f_lqr = lambda t, x: quaternion_dynamics(x, dt, inertia, compute_control_torque_lqr(x, x_d, Q, R, inertia, tau_max=tau_max), noise=tau_noise)
+        f_pid = lambda t, x: quaternion_dynamics(x, dt, inertia, compute_control_torque(x, x_d, K_p, K_d, tau_max=tau_max), noise=tau_noise)
+        sol = solve_ivp(f_pid, [t, t+dt], x, method='RK45')
         y[i] = sol.y[:, -1]
         x = y[i]
         e_angles[i] = quaternion2euler(y[i, :4])
