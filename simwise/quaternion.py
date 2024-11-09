@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import solve_continuous_are as ricatti_solver
 
 def normalize_quaternion(q):
     """Normalize a quaternion and force scalar positive.
@@ -166,3 +167,45 @@ def compute_control_torque(x, x_desired, K_p=1, K_d=1, tau_max=None):
             tau = tau_max * tau / np.linalg.norm(tau) 
 
     return tau
+def compute_control_torque_lqr(x,x_desired,Q=np.diag([1,1,1,1,1,1,1]),R=np.diag([1,1,1]),I=np.array([0.01461922201, 0.0412768466, 0.03235309961]), tau_max=None):
+    q = normalize_quaternion(x[:4]) # quaternion
+    q_d = normalize_quaternion(x_desired[:4])
+    q = q_d
+    q_0 = q[0]
+    q_1 = q[1]
+    q_2 = q[2]
+    q_3 = q[3]
+    
+    I_1 = I[0]
+    I_2 = I[1]
+    I_3 = I[2]
+
+    w_d = x_desired[4:]
+    w = x[4:] # omega
+    w = w_d
+    w_1 = w[0]
+    w_2 = w[1]
+    w_3 = w[2]
+    
+    A = 0.5 *np.array([[0,-w_1,-w_2,-w_3,-q_1,-q_2,-q_3],
+                 [w_1,0,w_3,-w_2,q_0,-q_3,q_2],
+                 [w_2,-w_3,0,w_1,q_3,q_0,-q_1],
+                 [w_3,w_2,-w_1,0,-q_2,q_1,q_0],
+                 [0,0,0,0,0,2*(w_3*(I_2-I_3))/I_1,2*(w_2*(I_2-I_3))/I_1],
+                 [0,0,0,0,2*(w_3*(I_3-I_1))/I_2,0,2*(w_1*(I_3-I_1))/I_2],
+                 [0,0,0,0,2*(w_2*(I_1-I_2))/I_3,2*(w_1*(I_1-I_2))/I_3,0]])
+    
+    B = np.array([[0,0,0],
+                 [0,0,0],
+                 [0,0,0],
+                 [0,0,0],
+                 [1/I_1,0,0],
+                 [0,1/I_2,0],
+                 [0,0,1/I_3]])
+    
+    P = np.array(ricatti_solver(A,B,Q,R)).T
+    K = np.matmul(np.matmul(np.linalg.inv(R),B.T),P)
+
+    u = -K@(x-x_desired) # control torque
+
+    return u
