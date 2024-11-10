@@ -141,6 +141,17 @@ def angle_axis_between(q1, q2):
 
     return theta, rotation_vector
 
+def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
+    """
+    Rotate a vector from inertial to body frame using quaternion.
+    """
+    q = normalize_quaternion(q)
+    v_quat = np.array([0, v[0], v[1], v[2]])
+    q_conj = quaternion_inverse(q)
+    temp = quaternion_multiply(q, v_quat)
+    v_rotated = quaternion_multiply(temp, q_conj)
+    return v_rotated[1:]
+
 
 def compute_control_torque(x, x_desired, K_p=1, K_d=1, tau_max=None):
     """
