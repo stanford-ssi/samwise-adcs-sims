@@ -105,66 +105,67 @@ def bdot_proportional(x: np.ndarray, B: np.ndarray, mu_max: float = 2.5e-2, K: f
     
     return tau, mu
 
-def bdot_adaptive(x: np.ndarray, B: np.ndarray, mu_max: float = 2.5e-2,
-                 state_history: list = [], window_size: int = 100) -> tuple:
+
+def bdot_pid(x: np.ndarray, B: np.ndarray, mu_max: float = 2.5e-2, 
+           Kp: float = 1e5, Ki: float = 1e2, Kd: float = 1e3,
+           state_history: list = [], dt: float = 0.1) -> tuple:
     """
-    Adaptive B-dot control that:
-    1. Learns from effectiveness of past actions
-    2. Adapts control parameters based on convergence rate
-    3. Uses dynamic deadband based on noise estimation
-    4. Implements intelligent multi-axis scheduling
+    B-dot PID control law.
     
     Args:
-        x: State vector [q1, q2, q3, q4, ω1, ω2, ω3]
-        B: Magnetic field vector [T]
-        mu_max: Maximum magnetic moment [A⋅m²]
-        state_history: List of past states for learning
-        window_size: Size of historical window for adaptation
+        x (np.ndarray): State vector [q1, q2, q3, q4, ω1, ω2, ω3]
+        B (np.ndarray): Magnetic field vector in body frame [T]
+        mu_max (float): Maximum magnetic moment per axis [A⋅m²]
+        Kp (float): Proportional gain
+        Ki (float): Integral gain
+        Kd (float): Derivative gain
+        state_history (list): List of past states [(x, B, dBdt)] for derivative/integral
+        dt (float): Time step for integration/derivative [s]
+    
+    Returns:
+        tuple: (Control torque vector [N⋅m], Magnetic moment vector [A⋅m²])
     """
-    omega = x[4:]
+    omega = x[4:]  # Extract angular velocity from state vector
+    
+    # Calculate apparent rate of change of B field
     dBdt = -np.cross(omega, B)
     
-    # Update state history
-    state_history.append((x.copy(), B.copy()))
-    if len(state_history) > window_size:
+    # Update state history with current dBdt
+    state_history.append((x.copy(), B.copy(), dBdt.copy()))
+    if len(state_history) > 100:  # Limit history size
         state_history.pop(0)
-    
-    # Initialize outputs
+        
+    # Initialize control terms
     mu = np.zeros(3)
     
-    if len(state_history) > 10:  # Need some history for adaptation
-        # Calculate convergence rates for each axis
-        convergence_rates = np.zeros(3)
-        for i in range(3):
-            past_omegas = [state[0][4+i] for state in state_history[-10:]]
-            convergence_rates[i] = np.abs(np.mean(np.diff(past_omegas)))
-        
-        # Estimate noise levels from history
-        noise_levels = np.zeros(3)
-        for i in range(3):
-            B_history = [state[1][i] for state in state_history]
-            noise_levels[i] = np.std(np.diff(B_history))
-        
-        # Dynamic deadband based on noise
-        deadbands = noise_levels * 3.0  # 3-sigma threshold
-        
-        # Prioritize axes based on convergence and effectiveness
-        priorities = convergence_rates * np.abs(dBdt)
-        best_axis = np.argmax(priorities)
-        
-        # Adaptive activation threshold
-        if abs(dBdt[best_axis]) > deadbands[best_axis]:
-            mu[best_axis] = -np.sign(dBdt[best_axis]) * mu_max
+    # Proportional term (basic bdot)
+    p_term = -Kp * dBdt
+    
+    # Integral term (if enabled)
+    i_term = np.zeros(3)
+    if Ki != 0 and len(state_history) > 1:
+        # Integrate dBdt over history
+        for past_state in state_history[-10:]:  # Use last 10 points
+            past_dBdt = past_state[2]
+            i_term += -Ki * past_dBdt * dt
             
-            # Optional: Coordinate secondary axis if highly effective
-            second_best = np.argsort(priorities)[-2]
-            if priorities[second_best] > 0.8 * priorities[best_axis]:
-                mu[second_best] = -np.sign(dBdt[second_best]) * mu_max * 0.5
+    # Derivative term (if enabled)
+    d_term = np.zeros(3)
+    if Kd != 0 and len(state_history) > 1:
+        # Get rate of change of dBdt
+        prev_dBdt = state_history[-2][2]
+        d2Bdt2 = (dBdt - prev_dBdt) / dt
+        d_term = -Kd * d2Bdt2
     
-    else:  # Fall back to simple bang-bang when insufficient history
-        best_axis = np.argmax(np.abs(dBdt))
-        if abs(dBdt[best_axis]) > 1e-6:
-            mu[best_axis] = -np.sign(dBdt[best_axis]) * mu_max
+    # Sum all terms
+    mu = p_term + i_term + d_term
     
+    # Saturate magnetic moment
+    for i in range(3):
+        if abs(mu[i]) > mu_max:
+            mu[i] = np.sign(mu[i]) * mu_max
+    
+    # Compute resulting torque
     tau = np.cross(mu, B)
+    
     return tau, mu
