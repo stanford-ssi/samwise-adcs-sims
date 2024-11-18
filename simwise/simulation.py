@@ -8,6 +8,7 @@ from graph_utils import graph_euler, graph_vector_matplotlib, graph_quaternion, 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+
 def simulate_control_torques():
     # Initial conditions
     q = np.array([1, 0, 0, 0])
