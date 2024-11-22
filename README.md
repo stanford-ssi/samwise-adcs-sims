@@ -7,6 +7,11 @@ To install the contents of this repo as a python package run:
 ```
 pip3 install .
 ```
+*INSTALL MAGNETIC FIELD MODEL*
+```
+cd igrf
+python -m pip install -e .
+```
 
 To run the code:
 ```

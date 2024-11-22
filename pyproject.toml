@@ -25,6 +25,7 @@ dependencies = [
     "scipy>=1.7.0",
     "plotly>=5.0.0",
     "tqdm"
+    "igrf"
 ]
 
 [project.optional-dependencies]
