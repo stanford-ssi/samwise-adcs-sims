@@ -1,0 +1,4 @@
+/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/igrf13_driver.dir
+/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/test.dir
+/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/edit_cache.dir
+/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/rebuild_cache.dir
