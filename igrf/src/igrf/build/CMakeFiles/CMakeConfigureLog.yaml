@@ -1,0 +1,344 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      The system is: Darwin - 23.1.0 - arm64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineFortranCompiler.cmake:186 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the Fortran compiler identification source file "CMakeFortranCompilerId.F" succeeded.
+      Compiler: /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran 
+      Build flags: -march=armv8.3-a;-ftree-vectorize;-fPIC;-fno-stack-protector;-O2;-pipe;-isystem;/opt/homebrew/Caskroom/miniconda/base/include
+      Id flags: -v 
+      
+      The output was:
+      0
+      Driving: /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include -v CMakeFortranCompilerId.F --sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mmacosx-version-min=14.0.0 -asm_macosx_version_min=14.0 -nodefaultexport -l gfortran
+      Using built-in specs.
+      COLLECT_GCC=/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran
+      COLLECT_LTO_WRAPPER=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/lto-wrapper
+      Target: arm64-apple-darwin20.0.0
+      Configured with: ../configure --prefix=/opt/homebrew/Caskroom/miniconda/base --build=x86_64-apple-darwin13.4.0 --host=arm64-apple-darwin20.0.0 --target=arm64-apple-darwin20.0.0 --with-libiconv-prefix=/opt/homebrew/Caskroom/miniconda/base --enable-languages=fortran --disable-multilib --enable-checking=release --disable-bootstrap --disable-libssp --with-gmp=/opt/homebrew/Caskroom/miniconda/base --with-mpfr=/opt/homebrew/Caskroom/miniconda/base --with-mpc=/opt/homebrew/Caskroom/miniconda/base --with-isl=/opt/homebrew/Caskroom/miniconda/base --enable-darwin-at-rpath
+      Thread model: posix
+      Supported LTO compression algorithms: zlib
+      gcc version 13.2.0 (GCC) 
+      COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-v' '--sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'a-'
+       /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/f951 CMakeFortranCompilerId.F -ffixed-form -cpp=/var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//cc8gm191.f90 -quiet -v -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -D__DYNAMIC__ -isystem /opt/homebrew/Caskroom/miniconda/base/include CMakeFortranCompilerId.F -fPIC -quiet -dumpdir a- -dumpbase CMakeFortranCompilerId.F -dumpbase-ext .F -march=armv8.3-a -mmacosx-version-min=14.0.0 -mlittle-endian -mabi=lp64 -O2 -version -ftree-vectorize -fPIC -fno-stack-protector -fintrinsic-modules-path /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude -o - |
+       /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/as -arch arm64 -v -mmacosx-version-min=14.0 -o /var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//ccP9iYrR.o
+      GNU Fortran (GCC) version 13.2.0 (arm64-apple-darwin20.0.0)
+      	compiled by GNU C version Clang 16.0.6, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version isl-0.26-IMath-32
+      
+      GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+      ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
+      ignoring nonexistent directory "/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../../arm64-apple-darwin20.0.0/include"
+      ignoring duplicate directory "/opt/homebrew/Caskroom/miniconda/base/include"
+        as it is a non-system directory that duplicates a system directory
+      #include "..." search starts here:
+      #include <...> search starts here:
+       /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude
+       /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include
+       /opt/homebrew/Caskroom/miniconda/base/include
+       /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed
+       /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
+      End of search list.
+      clang version 19.1.3
+      Target: arm64-apple-darwin23.1.0
+      Thread model: posix
+      InstalledDir: /opt/homebrew/Caskroom/miniconda/base/bin
+       (in-process)
+       "/opt/homebrew/Caskroom/miniconda/base/bin/clang-19" -cc1as -triple arm64-apple-macosx14.0.0 -target-sdk-version=14.5 -filetype obj -main-file-name - -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.4a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -fdebug-compilation-dir=/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/3.30.5/CompilerIdFortran -dwarf-debug-producer "clang version 19.1.3" -dwarf-version=4 -mrelocation-model pic -o /var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//ccP9iYrR.o -
+      Reading specs from /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/libgfortran.spec
+      rename spec lib to liborig
+      COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-v' '--sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'a-'
+      COMPILER_PATH=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/
+      LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../
+      COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-v' '--sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'a.'
+       /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/collect2 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/ -dynamic -arch arm64 -macosx_version_min 14.0.0 -o a.out -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../.. /var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//ccP9iYrR.o -lgfortran -lemutls_w -lgcc -lquadmath -lm -lemutls_w -lgcc -lSystem -lgcc -rpath /opt/homebrew/Caskroom/miniconda/base/lib -no_compact_unwind -rpath @loader_path -rpath /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -rpath /opt/homebrew/Caskroom/miniconda/base/lib
+      
+      
+      Compilation of the Fortran compiler identification source "CMakeFortranCompilerId.F" produced "a.out"
+      
+      The Fortran compiler identification is GNU, found in:
+        /Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/3.30.5/CompilerIdFortran/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeTestFortranCompiler.cmake:20 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Detecting Fortran compiler ABI info"
+    directories:
+      source: "/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h"
+      binary: "/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h"
+    cmakeVariables:
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-headerpad_max_install_names -Wl,-dead_strip_dylibs -Wl,-rpath,/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib"
+      CMAKE_Fortran_FLAGS: "-march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include"
+      CMAKE_Fortran_FLAGS_DEBUG: "-g"
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+    buildResult:
+      variable: "CMAKE_Fortran_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h'
+        
+        Run Build Command(s): /opt/homebrew/Cellar/cmake/3.30.5/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6a68b/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_6a68b.dir/build.make CMakeFiles/cmTC_6a68b.dir/build
+        Building Fortran object CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o
+        /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran   -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk   -v -Wl,-v -c /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o
+        Using built-in specs.
+        COLLECT_GCC=/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran
+        Target: arm64-apple-darwin20.0.0
+        Configured with: ../configure --prefix=/opt/homebrew/Caskroom/miniconda/base --build=x86_64-apple-darwin13.4.0 --host=arm64-apple-darwin20.0.0 --target=arm64-apple-darwin20.0.0 --with-libiconv-prefix=/opt/homebrew/Caskroom/miniconda/base --enable-languages=fortran --disable-multilib --enable-checking=release --disable-bootstrap --disable-libssp --with-gmp=/opt/homebrew/Caskroom/miniconda/base --with-mpfr=/opt/homebrew/Caskroom/miniconda/base --with-mpc=/opt/homebrew/Caskroom/miniconda/base --with-isl=/opt/homebrew/Caskroom/miniconda/base --enable-darwin-at-rpath
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-v' '-c' '-o' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_6a68b.dir/'
+         /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/f951 /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -cpp=/var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//ccR8eh34.f90 -quiet -v -D__DYNAMIC__ -isystem /opt/homebrew/Caskroom/miniconda/base/include -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -fPIC -quiet -dumpdir CMakeFiles/cmTC_6a68b.dir/ -dumpbase CMakeFortranCompilerABI.F90.F90 -dumpbase-ext .F90 -march=armv8.3-a -mmacosx-version-min=14.0.0 -mlittle-endian -mabi=lp64 -O2 -version -ftree-vectorize -fPIC -fno-stack-protector -fintrinsic-modules-path /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude -o - |
+         /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/as -arch arm64 -v -mmacosx-version-min=14.0 -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o
+        GNU Fortran (GCC) version 13.2.0 (arm64-apple-darwin20.0.0)
+        	compiled by GNU C version Clang 16.0.6, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version isl-0.26-IMath-32
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
+        ignoring nonexistent directory "/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../../arm64-apple-darwin20.0.0/include"
+        ignoring duplicate directory "/opt/homebrew/Caskroom/miniconda/base/include"
+          as it is a non-system directory that duplicates a system directory
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude
+         /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include
+         /opt/homebrew/Caskroom/miniconda/base/include
+         /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed
+         /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
+        End of search list.
+        clang version 19.1.3
+        Target: arm64-apple-darwin23.1.0
+        Thread model: posix
+        InstalledDir: /opt/homebrew/Caskroom/miniconda/base/bin
+         (in-process)
+         "/opt/homebrew/Caskroom/miniconda/base/bin/clang-19" -cc1as -triple arm64-apple-macosx14.0.0 -target-sdk-version=14.5 -filetype obj -main-file-name - -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.4a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -fdebug-compilation-dir=/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h -dwarf-debug-producer "clang version 19.1.3" -dwarf-version=4 -mrelocation-model pic -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -
+        COMPILER_PATH=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/
+        LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../
+        COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-v' '-c' '-o' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.'
+        Linking Fortran executable cmTC_6a68b
+        /opt/homebrew/Cellar/cmake/3.30.5/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6a68b.dir/link.txt --verbose=1
+        /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran -Wl,-headerpad_max_install_names -Wl,-dead_strip_dylibs -Wl,-rpath,/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib -v -Wl,-v -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -o cmTC_6a68b
+        Driving: /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran -Wl,-headerpad_max_install_names -Wl,-dead_strip_dylibs -Wl,-rpath,/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib -v -Wl,-v -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -o cmTC_6a68b -mmacosx-version-min=14.0.0 -asm_macosx_version_min=14.0 -nodefaultexport -l gfortran
+        Using built-in specs.
+        COLLECT_GCC=/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran
+        COLLECT_LTO_WRAPPER=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/lto-wrapper
+        Target: arm64-apple-darwin20.0.0
+        Configured with: ../configure --prefix=/opt/homebrew/Caskroom/miniconda/base --build=x86_64-apple-darwin13.4.0 --host=arm64-apple-darwin20.0.0 --target=arm64-apple-darwin20.0.0 --with-libiconv-prefix=/opt/homebrew/Caskroom/miniconda/base --enable-languages=fortran --disable-multilib --enable-checking=release --disable-bootstrap --disable-libssp --with-gmp=/opt/homebrew/Caskroom/miniconda/base --with-mpfr=/opt/homebrew/Caskroom/miniconda/base --with-mpc=/opt/homebrew/Caskroom/miniconda/base --with-isl=/opt/homebrew/Caskroom/miniconda/base --enable-darwin-at-rpath
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.2.0 (GCC) 
+        Reading specs from /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/libgfortran.spec
+        rename spec lib to liborig
+        COLLECT_GCC_OPTIONS='-L/opt/homebrew/Caskroom/miniconda/base/lib' '-v' '-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-o' 'cmTC_6a68b' '-mmacosx-version-min=14.0.0' '-asm_macosx_version_min=14.0' '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_6a68b-'
+        COMPILER_PATH=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/
+        LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../
+        COLLECT_GCC_OPTIONS='-L/opt/homebrew/Caskroom/miniconda/base/lib' '-v' '-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-o' 'cmTC_6a68b' '-mmacosx-version-min=14.0.0' '-asm_macosx_version_min=14.0' '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_6a68b.'
+         /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/collect2 -dynamic -arch arm64 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -macosx_version_min 14.0.0 -o cmTC_6a68b -L/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../.. -headerpad_max_install_names -dead_strip_dylibs -rpath /opt/homebrew/Caskroom/miniconda/base/lib -v CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -lgfortran -lemutls_w -lgcc -lquadmath -lm -lemutls_w -lgcc -lSystem -lgcc -rpath /opt/homebrew/Caskroom/miniconda/base/lib -no_compact_unwind -rpath @loader_path -rpath /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -rpath /opt/homebrew/Caskroom/miniconda/base/lib
+        collect2 version 13.2.0
+        /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/ld -dynamic -arch arm64 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -macosx_version_min 14.0.0 -o cmTC_6a68b -L/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../.. -headerpad_max_install_names -dead_strip_dylibs -rpath /opt/homebrew/Caskroom/miniconda/base/lib -v CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -lgfortran -lemutls_w -lgcc -lquadmath -lm -lemutls_w -lgcc -lSystem -lgcc -rpath /opt/homebrew/Caskroom/miniconda/base/lib -no_compact_unwind -rpath @loader_path -rpath /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -rpath /opt/homebrew/Caskroom/miniconda/base/lib
+        @(#)PROGRAM:ld  PROJECT:ld64-951.9
+        BUILD 14:23:12 Oct  1 2024
+        configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+        Library search paths:
+        	/opt/homebrew/Caskroom/miniconda/base/lib
+        	/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0
+        	/opt/homebrew/Caskroom/miniconda/base/lib
+        	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib
+        Framework search paths:
+        	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:113 (message)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeTestFortranCompiler.cmake:20 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Effective list of requested architectures (possibly empty)  : ""
+      Effective list of architectures found in the ABI info binary: "arm64"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeTestFortranCompiler.cmake:20 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Parsed Fortran implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude]
+          add: [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include]
+          add: [/opt/homebrew/Caskroom/miniconda/base/include]
+          add: [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed]
+          add: [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include]
+        end of search list found
+        collapse include dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude] ==> [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude]
+        collapse include dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include] ==> [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include]
+        collapse include dir [/opt/homebrew/Caskroom/miniconda/base/include] ==> [/opt/homebrew/Caskroom/miniconda/base/include]
+        collapse include dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed] ==> [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed]
+        collapse include dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include]
+        implicit include dirs: [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude;/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include;/opt/homebrew/Caskroom/miniconda/base/include;/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeTestFortranCompiler.cmake:20 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Parsed Fortran implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h']
+        ignore line: []
+        ignore line: [Run Build Command(s): /opt/homebrew/Cellar/cmake/3.30.5/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6a68b/fast]
+        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_6a68b.dir/build.make CMakeFiles/cmTC_6a68b.dir/build]
+        ignore line: [Building Fortran object CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o]
+        ignore line: [/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran   -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk   -v -Wl -v -c /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran]
+        ignore line: [Target: arm64-apple-darwin20.0.0]
+        ignore line: [Configured with: ../configure --prefix=/opt/homebrew/Caskroom/miniconda/base --build=x86_64-apple-darwin13.4.0 --host=arm64-apple-darwin20.0.0 --target=arm64-apple-darwin20.0.0 --with-libiconv-prefix=/opt/homebrew/Caskroom/miniconda/base --enable-languages=fortran --disable-multilib --enable-checking=release --disable-bootstrap --disable-libssp --with-gmp=/opt/homebrew/Caskroom/miniconda/base --with-mpfr=/opt/homebrew/Caskroom/miniconda/base --with-mpc=/opt/homebrew/Caskroom/miniconda/base --with-isl=/opt/homebrew/Caskroom/miniconda/base --enable-darwin-at-rpath]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.2.0 (GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-v' '-c' '-o' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_6a68b.dir/']
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/f951 /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -cpp=/var/folders/fx/vmk8djws60n1_sfh07nb74080000gn/T//ccR8eh34.f90 -quiet -v -D__DYNAMIC__ -isystem /opt/homebrew/Caskroom/miniconda/base/include -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk /opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeFortranCompilerABI.F90 -fPIC -quiet -dumpdir CMakeFiles/cmTC_6a68b.dir/ -dumpbase CMakeFortranCompilerABI.F90.F90 -dumpbase-ext .F90 -march=armv8.3-a -mmacosx-version-min=14.0.0 -mlittle-endian -mabi=lp64 -O2 -version -ftree-vectorize -fPIC -fno-stack-protector -fintrinsic-modules-path /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude -o - |]
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/as -arch arm64 -v -mmacosx-version-min=14.0 -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o]
+        ignore line: [GNU Fortran (GCC) version 13.2.0 (arm64-apple-darwin20.0.0)]
+        ignore line: [	compiled by GNU C version Clang 16.0.6  GMP version 6.3.0  MPFR version 4.2.1  MPC version 1.3.1  isl version isl-0.26-IMath-32]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"]
+        ignore line: [ignoring nonexistent directory "/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../../arm64-apple-darwin20.0.0/include"]
+        ignore line: [ignoring duplicate directory "/opt/homebrew/Caskroom/miniconda/base/include"]
+        ignore line: [  as it is a non-system directory that duplicates a system directory]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/finclude]
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include]
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/include]
+        ignore line: [ /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/include-fixed]
+        ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include]
+        ignore line: [End of search list.]
+        ignore line: [clang version 19.1.3]
+        ignore line: [Target: arm64-apple-darwin23.1.0]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /opt/homebrew/Caskroom/miniconda/base/bin]
+        ignore line: [ (in-process)]
+        ignore line: [ "/opt/homebrew/Caskroom/miniconda/base/bin/clang-19" -cc1as -triple arm64-apple-macosx14.0.0 -target-sdk-version=14.5 -filetype obj -main-file-name - -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.4a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -fdebug-compilation-dir=/Users/lundeencahilly/Desktop/github/samwise-adcs-sims/igrf/src/igrf/build/CMakeFiles/CMakeScratch/TryCompile-ek3y9h -dwarf-debug-producer "clang version 19.1.3" -dwarf-version=4 -mrelocation-model pic -o CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -]
+        ignore line: [COMPILER_PATH=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/]
+        ignore line: [LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../]
+        ignore line: [COLLECT_GCC_OPTIONS='-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-v' '-c' '-o' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o' '-mmacosx-version-min=14.0.0'  '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.']
+        ignore line: [Linking Fortran executable cmTC_6a68b]
+        ignore line: [/opt/homebrew/Cellar/cmake/3.30.5/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6a68b.dir/link.txt --verbose=1]
+        ignore line: [/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran -Wl -headerpad_max_install_names -Wl -dead_strip_dylibs -Wl -rpath /opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib -v -Wl -v -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -o cmTC_6a68b]
+        ignore line: [Driving: /opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran -Wl -headerpad_max_install_names -Wl -dead_strip_dylibs -Wl -rpath /opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib -v -Wl -v -march=armv8.3-a -ftree-vectorize -fPIC -fno-stack-protector -O2 -pipe -isystem /opt/homebrew/Caskroom/miniconda/base/include -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -o cmTC_6a68b -mmacosx-version-min=14.0.0 -asm_macosx_version_min=14.0 -nodefaultexport -l gfortran]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/homebrew/Caskroom/miniconda/base/bin/arm64-apple-darwin20.0.0-gfortran]
+        ignore line: [COLLECT_LTO_WRAPPER=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/lto-wrapper]
+        ignore line: [Target: arm64-apple-darwin20.0.0]
+        ignore line: [Configured with: ../configure --prefix=/opt/homebrew/Caskroom/miniconda/base --build=x86_64-apple-darwin13.4.0 --host=arm64-apple-darwin20.0.0 --target=arm64-apple-darwin20.0.0 --with-libiconv-prefix=/opt/homebrew/Caskroom/miniconda/base --enable-languages=fortran --disable-multilib --enable-checking=release --disable-bootstrap --disable-libssp --with-gmp=/opt/homebrew/Caskroom/miniconda/base --with-mpfr=/opt/homebrew/Caskroom/miniconda/base --with-mpc=/opt/homebrew/Caskroom/miniconda/base --with-isl=/opt/homebrew/Caskroom/miniconda/base --enable-darwin-at-rpath]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.2.0 (GCC) ]
+        ignore line: [Reading specs from /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/libgfortran.spec]
+        ignore line: [rename spec lib to liborig]
+        ignore line: [COLLECT_GCC_OPTIONS='-L/opt/homebrew/Caskroom/miniconda/base/lib' '-v' '-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-o' 'cmTC_6a68b' '-mmacosx-version-min=14.0.0' '-asm_macosx_version_min=14.0' '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_6a68b-']
+        ignore line: [COMPILER_PATH=/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/]
+        ignore line: [LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/:/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../../]
+        ignore line: [COLLECT_GCC_OPTIONS='-L/opt/homebrew/Caskroom/miniconda/base/lib' '-v' '-march=armv8.3-a' '-ftree-vectorize' '-fPIC' '-fno-stack-protector' '-O2' '-pipe' '-isystem' '/opt/homebrew/Caskroom/miniconda/base/include' '-isysroot' '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk' '-o' 'cmTC_6a68b' '-mmacosx-version-min=14.0.0' '-asm_macosx_version_min=14.0' '-nodefaultexport' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_6a68b.']
+        link line: [ /opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/collect2 -dynamic -arch arm64 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -macosx_version_min 14.0.0 -o cmTC_6a68b -L/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../.. -headerpad_max_install_names -dead_strip_dylibs -rpath /opt/homebrew/Caskroom/miniconda/base/lib -v CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -lgfortran -lemutls_w -lgcc -lquadmath -lm -lemutls_w -lgcc -lSystem -lgcc -rpath /opt/homebrew/Caskroom/miniconda/base/lib -no_compact_unwind -rpath @loader_path -rpath /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -rpath /opt/homebrew/Caskroom/miniconda/base/lib]
+          arg [/opt/homebrew/Caskroom/miniconda/base/libexec/gcc/arm64-apple-darwin20.0.0/13.2.0/collect2] ==> ignore
+          arg [-dynamic] ==> ignore
+          arg [-arch] ==> ignore
+          arg [arm64] ==> ignore
+          arg [-syslibroot] ==> ignore
+          arg [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk] ==> ignore
+          arg [-macosx_version_min] ==> ignore
+          arg [14.0.0] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_6a68b] ==> ignore
+          arg [-L/opt/homebrew/Caskroom/miniconda/base/lib] ==> dir [/opt/homebrew/Caskroom/miniconda/base/lib]
+          arg [-L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0] ==> dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0]
+          arg [-L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../..] ==> dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../..]
+          arg [-headerpad_max_install_names] ==> ignore
+          arg [-dead_strip_dylibs] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [/opt/homebrew/Caskroom/miniconda/base/lib] ==> ignore
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o] ==> ignore
+          arg [-lgfortran] ==> lib [gfortran]
+          arg [-lemutls_w] ==> lib [emutls_w]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lquadmath] ==> lib [quadmath]
+          arg [-lm] ==> lib [m]
+          arg [-lemutls_w] ==> lib [emutls_w]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lSystem] ==> lib [System]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-rpath] ==> ignore
+          arg [/opt/homebrew/Caskroom/miniconda/base/lib] ==> ignore
+          arg [-no_compact_unwind] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [@loader_path] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [/opt/homebrew/Caskroom/miniconda/base/lib] ==> ignore
+        ignore line: [collect2 version 13.2.0]
+        ignore line: [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/ld -dynamic -arch arm64 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -macosx_version_min 14.0.0 -o cmTC_6a68b -L/opt/homebrew/Caskroom/miniconda/base/lib -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -L/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../.. -headerpad_max_install_names -dead_strip_dylibs -rpath /opt/homebrew/Caskroom/miniconda/base/lib -v CMakeFiles/cmTC_6a68b.dir/CMakeFortranCompilerABI.F90.o -lgfortran -lemutls_w -lgcc -lquadmath -lm -lemutls_w -lgcc -lSystem -lgcc -rpath /opt/homebrew/Caskroom/miniconda/base/lib -no_compact_unwind -rpath @loader_path -rpath /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0 -rpath /opt/homebrew/Caskroom/miniconda/base/lib]
+        linker tool for 'Fortran': /opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/ld
+        Library search paths: [;/opt/homebrew/Caskroom/miniconda/base/lib;/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0;/opt/homebrew/Caskroom/miniconda/base/lib;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib]
+        Framework search paths: [;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/]
+        remove lib [System]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib] ==> [/opt/homebrew/Caskroom/miniconda/base/lib]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0] ==> [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/../../..] ==> [/opt/homebrew/Caskroom/miniconda/base/lib]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib] ==> [/opt/homebrew/Caskroom/miniconda/base/lib]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0] ==> [/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0]
+        collapse library dir [/opt/homebrew/Caskroom/miniconda/base/lib] ==> [/opt/homebrew/Caskroom/miniconda/base/lib]
+        collapse library dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib]
+        collapse framework dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks]
+        implicit libs: [gfortran;emutls_w;gcc;quadmath;m;emutls_w;gcc;gcc]
+        implicit objs: []
+        implicit dirs: [/opt/homebrew/Caskroom/miniconda/base/lib;/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib]
+        implicit fwks: [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/opt/homebrew/Cellar/cmake/3.30.5/share/cmake/Modules/CMakeTestFortranCompiler.cmake:20 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Running the Fortran compiler's linker: "/opt/homebrew/Caskroom/miniconda/base/lib/gcc/arm64-apple-darwin20.0.0/13.2.0/ld" "-v"
+      @(#)PROGRAM:ld  PROJECT:ld64-951.9
+      BUILD 14:23:12 Oct  1 2024
+      configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+      LTO support using: LLVM version 19.1.3 (static support for 29, runtime is 29)
+      TAPI support using: conda-forge TAPI version 1300.6.5 (https://github.com/tpoechtrager/apple-libtapi/commit/b8c5ac40267aa5f6004dd38cc2b2cd84f2d9d555)
+...
