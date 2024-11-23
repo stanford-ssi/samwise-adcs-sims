@@ -1,5 +1,0 @@
-numpy
-scipy
-typing
-dataclasses
-marshmallow

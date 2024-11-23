@@ -3,9 +3,27 @@
 
 6DOF python simulation for validating SAMWISE ADCS
 
-To install the contents of this repo as a python package run:
+
+## Installation
+To install the contents of this repo as an editable python package run:
 ```
-pip3 install .
+pip3 install . -e
+```
+(making sure you are in the root folder)
+
+## Directory Structure
+* `attitude`: Attitude GNC algorithms
+* `orbit`: Orbit GNC algorithms
+* `world_model`: Code for modelling things external to the satellite (such as fields, gravity, etc)
+* `data_structures`: Classes for holding and modeling data
+* `math`: Purely math utils (e.g. quaternion functions)
+* `utils`: General utilities (plotting, etc)
+* `simulations`: Runnable code goes here - **each file must define a `run` method!**
+
+## Running the Code
+To run the code, type:
+```
+python3 simwise/main.py --run [name of file in simulations folder]
 ```
 *INSTALL MAGNETIC FIELD MODEL*
 ```
@@ -13,11 +31,10 @@ cd igrf
 python -m pip install -e .
 ```
 
-To run the code:
-```
-python3 simwise/simulation.py
-```
+e.g. `python3 simwise/main.py --run simulate_attitude`
 
+
+## References
 > [!NOTE]
 > See the rust code for the actual board here:
 > https://github.com/polygnomial/adcs
