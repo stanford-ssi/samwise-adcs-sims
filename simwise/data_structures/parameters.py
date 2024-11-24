@@ -2,6 +2,7 @@ import numpy as np
 
 class Parameters:
     dt = 1/60 # [sec]
+    t_start = 0 # [sec]
     t_end = 2 * 60 # [sec]
 
     inertia = np.array([0.01461922201, 0.0412768466, 0.03235309961]) # [kg m^2]
@@ -14,3 +15,20 @@ class Parameters:
     noise_torque = 0.00000288 # [Nm]
 
     mu_max = 2*3.0e-2  # 0.030 A⋅m²
+    
+    # Initial Orbit Properties:
+    a = 7000e3 # [m]
+    e = 0.001
+    i = 0.1 # [rad]
+    Ω = 0.1 # [rad]
+    ω = 0.1 # [rad]
+    θ = 0.1 # [rad]
+    initial_orbit_state = np.array([a, e, i, Ω, ω, θ])
+
+    
+    
+    
+    
+    
+    
+    

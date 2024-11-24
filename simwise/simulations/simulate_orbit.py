@@ -7,6 +7,7 @@ from simwise.data_structures.satellite_state import SatelliteState
 from simwise.utils.plots import plot_states_plotly
 from simwise.orbit.equinoctial import *
 
+
 def run():
     params = Parameters()
     state = SatelliteState()
