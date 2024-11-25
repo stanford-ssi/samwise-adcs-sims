@@ -1,9 +1,10 @@
 import numpy as np
 
 class Parameters:
-    dt = 1/60 # [sec]
-    t_start = 0 # [sec]
-    t_end = 2 * 60 # [sec]
+    dt_orbit = 60           # [sec] (1 minute)
+    dt_attitude = 0.1       # [sec] 
+    t_start = 0             # [sec]
+    t_end = 60 * 60         # [sec] (1 hour)
 
     inertia = np.array([0.01461922201, 0.0412768466, 0.03235309961]) # [kg m^2]
 
@@ -24,6 +25,12 @@ class Parameters:
     ω = 0.1 # [rad]
     θ = 0.1 # [rad]
     initial_orbit_state = np.array([a, e, i, Ω, ω, θ])
+    
+    # Attitude initial conditions
+    q_initial = np.array([1, 0, 0, 0])
+    w_initial = np.array([0.0, 0.2, 0.1])  # [rad/s]
+    q_desired = np.array([0.5, 0.5, 0.5, 0.5])
+    w_desired = np.array([0, 0, 0])  # [rad/s]
 
     
     

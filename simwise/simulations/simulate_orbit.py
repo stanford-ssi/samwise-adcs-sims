@@ -26,14 +26,13 @@ def simulate_orbit():
     print("Simulating orbit...")
     states = []
     times = []
-    num_points = int(params.t_end // params.dt)
+    num_points = int((params.t_end - params.t_start) // params.dt_orbit) + 1
 
-    for _ in tqdm(range(num_points)):
-        state.propagate_time(params)
+    for i in tqdm(range(num_points)):
+        t = params.t_start + i * params.dt_orbit
         state.propagate_orbit(params)
-        
         states.append(copy.deepcopy(state))
-        times.append(state.t)
+        times.append(t)
 
     return states, times
 

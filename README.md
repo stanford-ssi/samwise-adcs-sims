@@ -23,7 +23,11 @@ pip3 install . -e
 ## Running the Code
 To run the code, type:
 ```
-python3 simwise/main.py --run [name of file in simulations folder]
+python -m simwise.main --run [name of file in simulations folder]
+```
+i.e. to run the integrated sim, run the following command in the root directory:
+```
+python -m simwise.main --run simulate_attitude_orbit_integrated
 ```
 *INSTALL MAGNETIC FIELD MODEL*
 ```

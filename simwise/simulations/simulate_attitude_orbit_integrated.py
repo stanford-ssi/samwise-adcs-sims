@@ -1,58 +1,134 @@
-from simwise.data_structures.parameters import Parameters
-from simwise.simulations.simulate_attitude import run as simulate_attitude
-from simwise.simulations.simulate_orbit import run as simulate_orbit
-import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
+import copy
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-def run():
-    sim = IntegratedSimulation()
-    orbit_times, orbit_states, attitude_times, attitude_states = sim.run_simulation()
-    sim.plot_results(orbit_times, orbit_states, attitude_times, attitude_states)
+from simwise.data_structures.parameters import Parameters
+from simwise.data_structures.satellite_state import SatelliteState
+from simwise.orbit.equinoctial import coe2mee, mee2coe
 
 class IntegratedSimulation:
     def __init__(self):
         self.params = Parameters()
+        self.state = SatelliteState()
+
+        # Initial orbit conditions
+        self.state.orbit_keplerian = np.array([
+            self.params.a, self.params.e, self.params.i,
+            self.params.Ω, self.params.ω, self.params.θ
+        ])
+        self.state.orbit_mee = coe2mee(self.state.orbit_keplerian)
+
+        # Initial attitude conditions
+        self.state.q = self.params.q_initial
+        self.state.w = self.params.w_initial
+        self.state.q_d = self.params.q_desired
+        self.state.w_d = self.params.w_desired
 
     def run_simulation(self):
-        # Run orbit simulation
-        orbit_states, orbit_times = simulate_orbit()
+        print("Simulating...")
+        states = []
+        num_points = int(self.params.t_end // self.params.dt)
 
-        # Run attitude simulation
-        attitude_states, attitude_times = simulate_attitude()
+        for _ in tqdm(range(num_points)):
+            self.state.propagate_time(self.params)
+            self.state.propagate_orbit(self.params)
+            self.state.propagate_attitude_control(self.params)
 
-        return orbit_times, orbit_states, attitude_times, attitude_states
+            states.append(copy.deepcopy(self.state))
 
-    def plot_results(self, orbit_times, orbit_states, attitude_times, attitude_states):
-        # Plot orbit results
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 15))
+        return states
 
-        ax1.plot(orbit_states[:, 0], orbit_states[:, 1], label='Orbit XY')
-        ax1.set_xlabel('X (m)')
-        ax1.set_ylabel('Y (m)')
-        ax1.set_title('Orbit Trajectory')
-        ax1.legend()
-        ax1.grid(True)
+    
+    def plot_results(self, states):
+        # Create subplots
+        fig = make_subplots(
+            rows=7, cols=2,
+            shared_xaxes=True,
+            vertical_spacing=0.08,
+            horizontal_spacing=0.15,
+            subplot_titles=(
+                "Semi-major axis", "q_0", 
+                "Eccentricity", "q_1",
+                "Inclination", "q_2",
+                "RAAN", "q_3",
+                "Argument of Periapsis", "ω_x",
+                "True Anomaly", "ω_y",
+                "", "ω_z"
+            ),
+        )
 
-        # Plot attitude quaternions
-        ax2.plot(attitude_times, attitude_states[:, 0], label='q0')
-        ax2.plot(attitude_times, attitude_states[:, 1], label='q1')
-        ax2.plot(attitude_times, attitude_states[:, 2], label='q2')
-        ax2.plot(attitude_times, attitude_states[:, 3], label='q3')
-        ax2.set_xlabel('Time (s)')
-        ax2.set_ylabel('Quaternion Components')
-        ax2.set_title('Attitude Quaternions')
-        ax2.legend()
-        ax2.grid(True)
+        times = [state.t for state in states]
 
-        # Plot angular velocities
-        ax3.plot(attitude_times, attitude_states[:, 4], label='wx')
-        ax3.plot(attitude_times, attitude_states[:, 5], label='wy')
-        ax3.plot(attitude_times, attitude_states[:, 6], label='wz')
-        ax3.set_xlabel('Time (s)')
-        ax3.set_ylabel('Angular Velocity (rad/s)')
-        ax3.set_title('Angular Velocities')
-        ax3.legend()
-        ax3.grid(True)
+        # Orbit parameters
+        orbit_params = [
+            ("a (km)", lambda s: s.orbit_keplerian[0] / 1000),
+            ("e", lambda s: s.orbit_keplerian[1]),
+            ("i (deg)", lambda s: np.degrees(s.orbit_keplerian[2])),
+            ("Ω (deg)", lambda s: np.degrees(s.orbit_keplerian[3])),
+            ("ω (deg)", lambda s: np.degrees(s.orbit_keplerian[4])),
+            ("θ (deg)", lambda s: np.degrees(s.orbit_keplerian[5]))
+        ]
 
-        plt.tight_layout()
-        plt.show()
+        for i, (name, func) in enumerate(orbit_params):
+            values = [func(state) for state in states]
+            fig.add_trace(go.Scatter(x=times, y=values, name=name), row=i+1, col=1)
+            fig.update_yaxes(title_text=name, row=i+1, col=1)
+
+        # Attitude parameters
+        attitude_params = [
+            ("q0", lambda s: s.q[0]),
+            ("q1", lambda s: s.q[1]),
+            ("q2", lambda s: s.q[2]),
+            ("q3", lambda s: s.q[3]),
+            ("wx (rad/s)", lambda s: s.w[0]),
+            ("wy (rad/s)", lambda s: s.w[1]),
+            ("wz (rad/s)", lambda s: s.w[2])
+        ]
+
+        for i, (name, func) in enumerate(attitude_params):
+            values = [func(state) for state in states]
+            fig.add_trace(go.Scatter(x=times, y=values, name=name), row=i+1, col=2)
+            fig.update_yaxes(title_text=name, row=i+1, col=2)
+
+        # Update layout
+        fig.update_layout(
+            height=1000,
+            width=1500,
+            title_text="Integrated Orbit and Attitude Simulation",
+            showlegend=False,
+            title_x=0.5,
+            title_y=0.99,
+            title_xanchor='center',
+            title_yanchor='top'
+        )
+
+        # Add column titles
+        fig.add_annotation(
+            x=0.25, y=1.05, xref="paper", yref="paper",
+            text="Orbit Parameters", showarrow=False, font=dict(size=16)
+        )
+        fig.add_annotation(
+            x=0.75, y=1.05, xref="paper", yref="paper",
+            text="Attitude Parameters", showarrow=False, font=dict(size=16)
+        )
+
+        fig.update_xaxes(title_text="Time (s)", row=7, col=1)
+        fig.update_xaxes(title_text="Time (s)", row=7, col=2)
+
+        # Adjust subplot titles
+        for i, ann in enumerate(fig['layout']['annotations']):
+            ann['font'] = dict(size=12)
+            if i >= 14:  # Adjusting the position of column titles
+                ann['y'] = 1.06
+
+        fig.show()
+    
+def run():
+    sim = IntegratedSimulation()
+    states = sim.run_simulation()
+    sim.plot_results(states)
+
+if __name__ == "__main__":
+    run()

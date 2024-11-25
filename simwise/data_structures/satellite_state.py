@@ -40,9 +40,10 @@ class SatelliteState:
     B: np.ndarray   # [T]
     mu: np.ndarray  # [A • m^2]
 
-    def propagate_time(self, params: Parameters):
+    def propagate_time(self, params: Parameters, dt):
         """Update this state's time"""
-        self.t = self.t + params.dt
+        # Use this only for attitude
+        self.t = self.t + dt
 
     def propagate_attitude_control(self, params: Parameters):
         """Update this state to represent advancing attitude"""
@@ -57,11 +58,11 @@ class SatelliteState:
                                                      tau_max=params.max_torque)
 
         def attitude_ode(t, x):
-            return attitude_dynamics(x_attitude, params.dt, params.inertia, self.control_torque)
+            return attitude_dynamics(x_attitude, params.dt_attitude, params.inertia, self.control_torque)
 
         sol = solve_ivp(
             attitude_ode,
-            [self.t, self.t + params.dt],
+            [self.t, self.t + params.dt_attitude],
             x_attitude,
             method='RK45'
         )
@@ -86,11 +87,11 @@ class SatelliteState:
 
         # Propagate dynamics
         def attitude_ode(t, x):
-            return attitude_dynamics(x, params.dt, params.inertia, self.control_torque)
+            return attitude_dynamics(x, params.dt_attitude, params.inertia, self.control_torque)
 
         sol = solve_ivp(
             attitude_ode,
-            [self.t, self.t + params.dt],
+            [self.t, self.t + params.dt_attitude],
             x_attitude,
             method='RK45'
         )
@@ -104,11 +105,11 @@ class SatelliteState:
         f_perturbation = np.array([0, 0, 0])
 
         def orbit_ode(t, mee):
-            return mee_dynamics(mee, simwise.constants.MU_EARTH, params.dt, f_perturbation)
+            return mee_dynamics(mee, simwise.constants.MU_EARTH, params.dt_orbit, f_perturbation)
 
         sol = solve_ivp(
             orbit_ode,
-            [self.t, self.t + params.dt],
+            [self.t, self.t + params.dt_orbit],
             self.orbit_mee,
             method='RK45'
         )

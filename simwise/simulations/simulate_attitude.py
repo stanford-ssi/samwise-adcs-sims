@@ -22,7 +22,7 @@ def simulate_attitude():
     num_points = int(params.t_end // params.dt)
 
     for _ in tqdm(range(num_points)):
-        state.propagate_time(params)
+        state.propagate_time(params, params.dt_attitude)
         state.propagate_attitude_control(params)
 
         states.append(copy.deepcopy(state))
