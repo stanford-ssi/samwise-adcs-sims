@@ -29,17 +29,26 @@ class IntegratedSimulation:
     def run_simulation(self):
         print("Simulating...")
         states = []
-        num_points = int(self.params.t_end // self.params.dt)
+        times = []
+        num_points_attitude = int((self.params.t_end - self.params.t_start) // self.params.dt_attitude) + 1
+        num_points_orbit = int((self.params.t_end - self.params.t_start) // self.params.dt_orbit) + 1
 
-        for _ in tqdm(range(num_points)):
-            self.state.propagate_time(self.params)
-            self.state.propagate_orbit(self.params)
+        for i in tqdm(range(num_points_attitude)):
+            # Define time in terms of smaller timestep - attitude
+            t = self.params.t_start + i * self.params.dt_attitude
+            self.state.t = t  # Set the time attribute of the state
+
+            # Propagate attitude at every step - smaller timestep
             self.state.propagate_attitude_control(self.params)
-
+            
+            # Propagate orbit for greater time step - orbit
+            if i % int(self.params.dt_orbit / self.params.dt_attitude) == 0:
+                self.state.propagate_orbit(self.params)
+            
             states.append(copy.deepcopy(self.state))
+            times.append(t)
 
         return states
-
     
     def plot_results(self, states):
         # Create subplots
@@ -59,7 +68,7 @@ class IntegratedSimulation:
             ),
         )
 
-        times = [state.t for state in states]
+        times = [state.t for state in states]  # Extract times from states
 
         # Orbit parameters
         orbit_params = [
@@ -114,8 +123,10 @@ class IntegratedSimulation:
             text="Attitude Parameters", showarrow=False, font=dict(size=16)
         )
 
-        fig.update_xaxes(title_text="Time (s)", row=7, col=1)
-        fig.update_xaxes(title_text="Time (s)", row=7, col=2)
+        # Update x-axes to show time
+        for i in range(7):
+            fig.update_xaxes(title_text="Time (s)", row=i+1, col=1, showticklabels=True)
+            fig.update_xaxes(title_text="Time (s)", row=i+1, col=2, showticklabels=True)
 
         # Adjust subplot titles
         for i, ann in enumerate(fig['layout']['annotations']):

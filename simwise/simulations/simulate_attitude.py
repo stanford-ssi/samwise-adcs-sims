@@ -19,7 +19,7 @@ def simulate_attitude():
     # Simulate
     print("Simulating attitude...")
     states = []
-    num_points = int(params.t_end // params.dt)
+    num_points = int(params.t_end // params.dt_attitude)
 
     for _ in tqdm(range(num_points)):
         state.propagate_time(params, params.dt_attitude)

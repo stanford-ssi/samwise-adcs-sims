@@ -30,14 +30,22 @@ def simulate_orbit():
 
     for i in tqdm(range(num_points)):
         t = params.t_start + i * params.dt_orbit
+        state.t = t
         state.propagate_orbit(params)
         states.append(copy.deepcopy(state))
         times.append(t)
 
+    print(f"Number of states: {len(states)}")
+    if states:
+        print(f"First state: {states[0].orbit_keplerian}")
+        print(f"Last state: {states[-1].orbit_keplerian}")
+ 
     return states, times
 
 def run():
     states, times = simulate_orbit()
+    
+
     
     # Plot
     fig = plot_states_plotly(

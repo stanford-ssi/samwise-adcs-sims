@@ -1,10 +1,10 @@
 import numpy as np
 
 class Parameters:
-    dt_orbit = 60           # [sec] (1 minute)
+    dt_orbit = 1           # [sec] (1 sec)
     dt_attitude = 0.1       # [sec] 
     t_start = 0             # [sec]
-    t_end = 60 * 60         # [sec] (1 hour)
+    t_end = 1 * 60         # [sec] (1 minute)
 
     inertia = np.array([0.01461922201, 0.0412768466, 0.03235309961]) # [kg m^2]
 
