@@ -31,6 +31,11 @@ class Parameters:
     w_initial = np.array([0.0, 0.2, 0.1])  # [rad/s]
     q_desired = np.array([0.5, 0.5, 0.5, 0.5])
     w_desired = np.array([0, 0, 0])  # [rad/s]
+    
+    
+    # Satellite Cp Cg Parameters:
+    Cp = np.array([0,0,0])                                      # Defined for fully deployed satellite
+    Cg = np.array([20/4, 10*np.sqrt(2)/2, 10*np.sqrt(2)/2])     # Arbitrarily set for sat since we don't know CAD yet
 
     
     
