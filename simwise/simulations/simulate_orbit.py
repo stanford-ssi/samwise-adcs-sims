@@ -5,38 +5,41 @@ import copy
 from simwise.data_structures.parameters import Parameters
 from simwise.data_structures.satellite_state import SatelliteState
 from simwise.utils.plots import plot_states_plotly
-from simwise.orbit.equinoctial import *
+from simwise.orbit.equinoctial import coe2mee, mee2coe
 
-
-def run():
+def simulate_orbit():
     params = Parameters()
     state = SatelliteState()
 
-    # Set parameters
-    params.dt = 1 # [sec]
-    params.t_end = 60 * 90 # [sec] 
-    
-    # Initial orbit conditions
-    a = 7000e3 # [m]
-    e = 0.001
-    i = 0.1 # [rad]
-    Ω = 0.1 # [rad]
-    ω = 0.1 # [rad]
-    θ = 0.1 # [rad]
-    state.orbit_keplerian = np.array([a, e, i, Ω, ω, θ])
+    # Use parameters defined in parameters.py
+    state.orbit_keplerian = np.array([
+        params.a,
+        params.e,
+        params.i,
+        params.Ω,
+        params.ω,
+        params.θ
+    ])
     state.orbit_mee = coe2mee(state.orbit_keplerian)
 
     # Simulate
-    print("Simulating...")
-    states: list[SatelliteState] = []
+    print("Simulating orbit...")
+    states = []
+    times = []
     num_points = int(params.t_end // params.dt)
 
     for _ in tqdm(range(num_points)):
         state.propagate_time(params)
         state.propagate_orbit(params)
+        
+        states.append(copy.deepcopy(state))
+        times.append(state.t)
 
-        states.append(copy.copy(state))
+    return states, times
 
+def run():
+    states, times = simulate_orbit()
+    
     # Plot
     fig = plot_states_plotly(
         states,
@@ -58,5 +61,7 @@ def run():
         },
         spacing=0.05
     )
-
     fig.show()
+
+if __name__ == "__main__":
+    run()

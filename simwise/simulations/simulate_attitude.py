@@ -1,4 +1,3 @@
-# Basic attitude simulation with no perturbation torques
 import numpy as np
 from tqdm import tqdm
 import copy
@@ -7,61 +6,19 @@ from simwise.data_structures.parameters import Parameters
 from simwise.data_structures.satellite_state import SatelliteState
 from simwise.utils.plots import plot_states_plotly
 
-
-def simulate_attitude(start_time, end_time, time_step, orbit_states=None):
+def simulate_attitude():
     params = Parameters()
     state = SatelliteState()
-    state.q = np.array([1, 0, 0, 0])
-    state.w = np.array([0.0, 0.2, 0.1])  # [rad/s]
-    state.q_d = np.array([0.5, 0.5, 0.5, 0.5])
-    state.w_d = np.array([0, 0, 0])  # [rad/s]
 
-    # Define parameters
-    params.dt = time_step
-    params.t_end = end_time - start_time
+    # Set initial state
+    state.q = np.array([1, 0, 0, 0])  # Initial quaternion
+    state.w = np.array([0.0, 0.2, 0.1])  # Initial angular velocity [rad/s]
+    state.q_d = np.array([0.5, 0.5, 0.5, 0.5])  # Desired quaternion
+    state.w_d = np.array([0, 0, 0])  # Desired angular velocity [rad/s]
 
     # Simulate
     print("Simulating attitude...")
-    states: list[SatelliteState] = []
-    num_points = int(params.t_end // params.dt)
-
-    for i in tqdm(range(num_points)):
-        state.t = start_time + i * time_step
-        state.propagate_time(params)
-        state.propagate_attitude_control(params)
-
-        # If orbit_states is provided, update state with orbital information
-        if orbit_states is not None:
-            state.position = orbit_states[i][:3]
-            state.velocity = orbit_states[i][3:]
-
-        states.append(copy.deepcopy(state))
-
-    # Extract times and attitude states
-    times = [state.t for state in states]
-    attitude_states = np.array([np.concatenate([state.q, state.w]) for state in states])
-
-    return times, attitude_states
-
-
-def run():
-    params = Parameters()
-    state = SatelliteState()
-
-    # Define initial state
-    state.q = np.array([1, 0, 0, 0])
-    state.w = np.array([0.0, 0.2, 0.1])  # [rad/s]
-
-    state.q_d = np.array([0.5, 0.5, 0.5, 0.5])
-    state.w_d = np.array([0, 0, 0])  # [rad/s]
-
-    # Define parameters
-    params.dt = 1/60  # [sec]
-    params.t_end = 2 * 60  # [sec] 2 minutes
-
-    # Simulate
-    print("Simulating...")
-    states: list[SatelliteState] = []
+    states = []
     num_points = int(params.t_end // params.dt)
 
     for _ in tqdm(range(num_points)):
@@ -70,6 +27,11 @@ def run():
 
         states.append(copy.deepcopy(state))
 
+    return states
+
+def run():
+    states = simulate_attitude()
+    
     # Plot
     fig = plot_states_plotly(
         states,
@@ -92,5 +54,7 @@ def run():
         },
         spacing=0.05
     )
-
     fig.show()
+
+if __name__ == "__main__":
+    run()

@@ -22,7 +22,7 @@ def coe2mee(elements):
     return np.array([p, f, g, h, k, L])
 
 def mee2coe(elements):
-    """_summary_
+    """Transform modified equinoctial elements to classic (keplerian) orbital elements.
 
     Args:
         elements (_type_): _description_
@@ -42,17 +42,11 @@ def mee2coe(elements):
     θ = L - Ω - ω
     return np.array([a, e, i, Ω, ω, θ])
 
-def mee2cartesian(elements, mu):
-    """_summary_
 
-    Args:
-        elements (_type_): _description_
-        mu (_type_): _description_
-    """
-    raise NotImplementedError
+
 
 def mee_dynamics(elements, mu, dt, f_perturbation):
-    """_summary_
+    """ Do rigid body dyamics of a body in MEE
 
     Args:
         elements (_type_): _description_
