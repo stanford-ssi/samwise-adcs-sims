@@ -39,6 +39,10 @@ class SatelliteState:
     #  Magnetorquer data
     B: np.ndarray   # [T]
     mu: np.ndarray  # [A • m^2]
+    
+    # Pertubation Forces:
+    Drag: np.ndarray   # [N]
+    
 
     def propagate_time(self, params: Parameters, dt):
         """Update this state's time"""

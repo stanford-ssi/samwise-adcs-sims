@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 from simwise.data_structures.parameters import Parameters
 from simwise.data_structures.satellite_state import SatelliteState
 from simwise.orbit.equinoctial import coe2mee, mee2coe
+from simwise.world_model.drag import dragPertubationTorque
 
 class IntegratedSimulation:
     def __init__(self):
@@ -32,6 +33,7 @@ class IntegratedSimulation:
         times = []
         num_points_attitude = int((self.params.t_end - self.params.t_start) // self.params.dt_attitude) + 1
         num_points_orbit = int((self.params.t_end - self.params.t_start) // self.params.dt_orbit) + 1
+        
 
         for i in tqdm(range(num_points_attitude)):
             # Define time in terms of smaller timestep - attitude
@@ -44,6 +46,7 @@ class IntegratedSimulation:
             # Propagate orbit for greater time step - orbit
             if i % int(self.params.dt_orbit / self.params.dt_attitude) == 0:
                 self.state.propagate_orbit(self.params)
+            
             
             states.append(copy.deepcopy(self.state))
             times.append(t)
