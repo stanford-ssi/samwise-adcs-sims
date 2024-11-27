@@ -14,6 +14,7 @@ from simwise.attitude.bdot import *
 from simwise.orbit.equinoctial import *
 from simwise.data_structures.parameters import Parameters
 import simwise.constants
+from simwise.forces.drag import dragPertubationTorque
 
 
 class SatelliteState:
@@ -47,6 +48,8 @@ class SatelliteState:
     r_vec: np.ndarray     # [m]  shape(3,n)     - R position vector - {x,y,z}
     # Satellite altitude (wrt non-J2 Earth)
     h: np.ndarray         # [m]
+    # Euler Angles
+    e_angles: np.ndarray  # [radians]
     
     
     # Pertubation Forces:
@@ -82,8 +85,12 @@ class SatelliteState:
 
         x_attitude_new = sol.y[:, -1]
 
-        self.q = x_attitude_new[:4]
-        self.w = x_attitude_new[4:]
+        # Derive Attitude State Information:
+        self.q = x_attitude_new[:4]                                 # Quaternion
+        self.w = x_attitude_new[4:]                                 # Angular Velocity
+        self.e_angles = quaternion2euler(self.q, sequence="zyx")    # Euler Angles
+        
+
 
     def propagate_attitude_bdot(self, params: Parameters):
         """Update this state to reflect one cycle of B-dot detumbling"""
@@ -110,8 +117,14 @@ class SatelliteState:
         )
 
         x_attitude_new = sol.y[:, -1]
-        self.q = x_attitude_new[:4]
-        self.w = x_attitude_new[4:]
+        
+        
+        # Derive Attitude State Information:
+        self.q = x_attitude_new[:4]                                 # Quaternion
+        self.w = x_attitude_new[4:]                                 # Angular Velocity
+        self.e_angles = quaternion2euler(self.q, sequence="zyx")    # Euler Angles
+        
+        
 
     def propagate_orbit(self, params: Parameters):
         """Update this state to represent advancing orbit"""
@@ -127,10 +140,23 @@ class SatelliteState:
             method='RK45'
         )
 
+        # Solve for the MEE and Keplerian Orbital States
         self.orbit_mee = sol.y[:, -1]
         self.orbit_keplerian = mee2coe(self.orbit_mee)
         
+        # Solve for Velocity, Position and Altitude at this Orbital Time Step
         self.v_vec_trn = get_velocity_vector_TRN(self.orbit_mee)
-        self.h = get_altitude(self.orbit_mee)
         self.r_vec = get_position_vector(self.orbit_mee)
+        self.h = get_altitude(self.orbit_mee)
+        
+        
+        
+        
+    def calculate_pertubation_forces(self):
+        ''' Solve directly for pertubation torques in one call'''
+        
+        # Solve for the Drag:
+        self.Drag = dragPertubationTorque(Parameters, self.e_angles, self.v_vec_trn[0], self.h)
+        
+        
         

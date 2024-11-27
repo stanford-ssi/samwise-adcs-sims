@@ -59,3 +59,4 @@ def compute_control_torque(x, x_desired, K_p=1, K_d=1, tau_max=None):
             tau = tau_max * tau / np.linalg.norm(tau) 
 
     return tau
+
