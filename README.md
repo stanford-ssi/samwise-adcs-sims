@@ -7,7 +7,7 @@
 ## Installation
 To install the contents of this repo as an editable python package run:
 ```
-pip3 install . -e
+pip3 install -e . 
 ```
 (making sure you are in the root folder)
 
