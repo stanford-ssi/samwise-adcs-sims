@@ -80,9 +80,9 @@ class SatelliteState:
         """Update this state to reflect one cycle of B-dot detumbling"""
         x_attitude = np.hstack((self.q, self.w))
 
-        # tau, mu = bdot_bang_bang(x, B, mu_max)
-        # tau, mu = bdot_step_bang_bang(x, B, mu_max)
-        # tau, mu = bdot_proportional(x, B, mu_max)
+        tau, mu = bdot_bang_bang(x_attitude, self.B, params.mu_max)
+        # tau, mu = bdot_step_bang_bang(x_attitude, self.B, params.mu_max)
+        # tau, mu = bdot_proportional(x_attitude, self.B, params.mu_max)
 
         tau, mu = bdot_pid(x_attitude, self.B, params.mu_max)
 

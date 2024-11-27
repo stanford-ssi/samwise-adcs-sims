@@ -31,16 +31,16 @@ def run():
     state.w = np.array([0.1, -0.15, 0.08])  # Initial angular velocity [rad/s]
 
     # Simulation parameters
-    params. dt = 5  # [sec]
+    params.dt_attitude = 5  # [sec]
     params.t_end = 24 * 60 * 60  # 8 hour simulation
 
     # Simulate
     print("Simulating...")
     states: list[SatelliteState] = []
-    num_points = int(params.t_end // params.dt)
+    num_points = int(params.t_end // params.dt_attitude)
 
     for _ in tqdm(range(num_points)):
-        state.propagate_time(params)
+        state.propagate_time(params, params.dt_attitude)
 
         # Set current magnetic field - TODO: replace with world model
         state.B = magnetic_field(state.t)
