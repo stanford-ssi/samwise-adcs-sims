@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 from simwise.data_structures.parameters import Parameters
 from simwise.data_structures.satellite_state import SatelliteState
 from simwise.orbit.equinoctial import coe2mee, mee2coe
-from simwise.world_model.drag import dragPertubationTorque
+
 
 class IntegratedSimulation:
     def __init__(self):
@@ -48,6 +48,8 @@ class IntegratedSimulation:
             if i % int(self.params.dt_orbit / self.params.dt_attitude) == 0:
                 self.state.propagate_orbit(self.params)
             
+            # Calculate perturbation forces
+            self.state.calculate_pertubation_forces()
             
             states.append(copy.deepcopy(self.state))
             times.append(t)
@@ -140,10 +142,41 @@ class IntegratedSimulation:
 
         fig.show()
     
+    def plot_perturbation_forces(self, times, drag_forces):
+        fig = make_subplots(
+            rows=1, cols=1,
+            subplot_titles=("Drag Force",),
+        )
+
+        drag_x = [df[0] for df in drag_forces]
+        drag_y = [df[1] for df in drag_forces]
+        drag_z = [df[2] for df in drag_forces]
+    
+        fig.add_trace(go.Scatter(x=times, y=drag_x, name="Drag Force X"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=times, y=drag_y, name="Drag Force Y"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=times, y=drag_z, name="Drag Force Z"), row=1, col=1)
+        
+        fig.update_xaxes(title_text="Time (s)", row=1, col=1)
+        fig.update_yaxes(title_text="Drag Force (N)", row=1, col=1)
+
+        fig.update_layout(
+            height=600,
+            width=1000,
+            title_text="Perturbation Forces",
+            showlegend=True,
+            title_x=0.5,
+            title_y=0.95,
+            title_xanchor='center',
+            title_yanchor='top'
+        )
+
+        fig.show()
+    
 def run():
     sim = IntegratedSimulation()
-    states = sim.run_simulation()
-    sim.plot_results(states)
+    states, times, drag_forces = sim.run_simulation()
+    sim.plot_results(states, times)
+    sim.plot_perturbation_forces(times, drag_forces)
 
 if __name__ == "__main__":
     run()

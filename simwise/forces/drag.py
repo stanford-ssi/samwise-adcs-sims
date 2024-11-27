@@ -26,11 +26,20 @@ def dragPertubationTorque(params, e_angles, velocity, altitude):
                 3. High Solar Activity
     """
     
-    # Calculate atmospheric density from satellite altitude
+    # Convert altitude to nearest multiple of 20 km
+    altitude_km = round(altitude / 1000 / 20) * 20
+
+    # Get the min and max altitudes from the data
+    min_altitude = min(low_solar_activity.keys())
+    max_altitude = max(low_solar_activity.keys())
+
+    # Clamp the altitude to the valid range
+    altitude_km = max(min_altitude, min(max_altitude, altitude_km))
+
     atmospheric_density = np.array([
-        low_solar_activity[round(altitude)]['density'],
-        moderate_solar_activity[round(altitude)]['density'],
-        high_solar_activity[round(altitude)]['density']
+        low_solar_activity[altitude_km]['density'],
+        moderate_solar_activity[altitude_km]['density'],
+        high_solar_activity[altitude_km]['density']
     ])
     
     # Calculate rotation matrix

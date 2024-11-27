@@ -2,6 +2,9 @@
 
 # MSISE-90 Model of Earth's Upper Atmosphere
 
+# Note, all altitudes (dictionary keys) are represented in km, not m
+#   a conversion must be made when passing it in
+
 # Low solar activity (F10.7 = 70)
 low_solar_activity = {
     100: {"temp": 188.0, "density": 4.974e-07, "pressure": 3.201e-01, "mol_wt": 28.82},
