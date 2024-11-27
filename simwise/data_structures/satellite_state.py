@@ -40,6 +40,15 @@ class SatelliteState:
     B: np.ndarray   # [T]
     mu: np.ndarray  # [A • m^2]
     
+    # Inertial Variables:
+    # Velocity Components of Satellite on Orbit
+    v_vec_trn: np.ndarray # [m/s]   shape(3,n)   - V vector in TRN (Tangential, Radial, Normal)
+    # Radial Components of Satellite Position on Orbit
+    r_vec: np.ndarray     # [m]  shape(3,n)     - R position vector - {x,y,z}
+    # Satellite altitude (wrt non-J2 Earth)
+    h: np.ndarray         # [m]
+    
+    
     # Pertubation Forces:
     Drag: np.ndarray   # [N]
     
@@ -120,3 +129,8 @@ class SatelliteState:
 
         self.orbit_mee = sol.y[:, -1]
         self.orbit_keplerian = mee2coe(self.orbit_mee)
+        
+        self.v_vec_trn = get_velocity_vector_TRN(self.orbit_mee)
+        self.h = get_altitude(self.orbit_mee)
+        self.r_vec = get_position_vector(self.orbit_mee)
+        

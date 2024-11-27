@@ -123,10 +123,7 @@ def define_satellite_vertices(params):
     Returns:
         np.ndarray: Array of vertex coordinates.
     """
-    #l, w, h = params.satellite_length, params.satellite_width, params.satellite_height
-    l = (2 * SOLARPANEL_WIDTH + CUBESAT_WIDTH * np.sqrt(2))
-    w = CUBESAT_WIDTH * np.sqrt(2)
-    h = SOLARPANEL_HEIGHT
+
     
     return np.array([
         [CUBESAT_WIDTH/2, -CUBESAT_WIDTH/2, -CUBESAT_HEIGHT/2], [CUBESAT_WIDTH/2, CUBESAT_WIDTH/2, -CUBESAT_HEIGHT/2],          # Cube Bottom Front

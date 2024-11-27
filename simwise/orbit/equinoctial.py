@@ -1,4 +1,5 @@
 import numpy as np
+from simwise.constants import *
 
 def coe2mee(elements):
     """Transform classic (keplerian) orbital elements to modified equinoctial elements.
@@ -19,6 +20,8 @@ def coe2mee(elements):
     h = np.tan(i / 2) * np.cos(Ω)
     k = np.tan(i / 2) * np.sin(Ω)
     L = Ω + ω + θ
+    
+    
     return np.array([p, f, g, h, k, L])
 
 def mee2coe(elements):
@@ -90,3 +93,198 @@ def mee_dynamics(elements, mu, dt, f_perturbation):
     # print(A, f)
 
     return A @ f_perturbation + b
+
+
+def mee_to_rv(mee, mu):
+    """
+    Convert Modified Equinoctial Elements (MEE) to position and velocity vectors in the inertial frame.
+
+    This function takes Modified Equinoctial Elements and the gravitational parameter
+    to calculate the corresponding position and velocity vectors in the inertial frame.
+
+    Args:
+        mee (numpy.ndarray): Modified Equinoctial Elements in the order [p, f, g, h, k, L]
+            p: semi-latus rectum
+            f, g: eccentricity vector components (f = e*cos(ω+Ω), g = e*sin(ω+Ω))
+            h, k: inclination vector components (h = tan(i/2)*cos(Ω), k = tan(i/2)*sin(Ω))
+            L: true longitude (L = Ω + ω + ν)
+        mu (float): Gravitational parameter of the central body (GM)
+
+    Returns:
+        tuple: A tuple containing two numpy arrays:
+            r_vec (numpy.ndarray): Position vector in the inertial frame [x, y, z]
+            v_vec (numpy.ndarray): Velocity vector in the inertial frame [vx, vy, vz]
+
+    Note:
+        All input and output quantities should be in consistent units.
+        Typically, distances in meters, velocities in m/s, and mu in m^3/s^2.
+        
+    The function uses the MEE formulation to directly compute the Cartesian state vectors,
+    which is particularly useful for orbits with small eccentricities and inclinations
+    where traditional Keplerian elements may face numerical issues.
+    """
+    p, f, g, h, k, L = mee
+    
+    # Calculate auxiliary variables
+    s2 = 1 + h**2 + k**2
+    w = 1 + f * np.cos(L) + g * np.sin(L)
+    r = p / w
+    
+    # Calculate position vector
+    x = r / s2 * ((1 - h**2 + k**2) * np.cos(L) + 2*h*k*np.sin(L) - k)
+    y = r / s2 * ((1 + h**2 - k**2) * np.sin(L) + 2*h*k*np.cos(L) + h)
+    z = 2*r / s2 * (h*np.sin(L) - k*np.cos(L))
+    
+    # Calculate velocity vector
+    sqrt_mu_p = np.sqrt(mu / p)
+    vx = -sqrt_mu_p / s2 * (((h**2 + k**2) * np.cos(L) - 2*h*k*np.sin(L) - f) + g/s2 * (1 - h**2 + k**2))
+    vy = -sqrt_mu_p / s2 * (((h**2 + k**2) * np.sin(L) + 2*h*k*np.cos(L) - g) - f/s2 * (1 + h**2 - k**2))
+    vz = 2*sqrt_mu_p / s2 * (f*h*np.sin(L) - g*k*np.cos(L) - (f*k + g*h)/s2)
+    
+    r_vec = np.array([x, y, z])
+    v_vec = np.array([vx, vy, vz])
+    
+    return r_vec, v_vec
+
+
+def calculate_altitude(r_vec, r_earth):
+    """Calculate altitude above Earth's surface."""
+    return np.linalg.norm(r_vec) - r_earth
+
+
+def calculate_trn_velocity(r_vec, v_vec):
+    """Calculate velocity components in the Tangential, Radial, Normal (TRN) frame."""
+    r_unit = r_vec / np.linalg.norm(r_vec)
+    h_vec = np.cross(r_vec, v_vec)
+    n_unit = h_vec / np.linalg.norm(h_vec)
+    t_unit = np.cross(n_unit, r_unit)
+    
+    v_radial = np.dot(v_vec, r_unit)
+    v_tangential = np.dot(v_vec, t_unit)
+    v_normal = np.dot(v_vec, n_unit)
+    
+    return np.array([v_tangential, v_radial, v_normal])
+
+
+def get_velocity_vector_TRN(elements, mu=MU_EARTH, element_type='mee'):
+    """
+    Calculate velocity vector from orbital elements in TRN coordinates.
+    
+    Args:
+        elements (np.ndarray): Orbital elements (MEE or COE)
+        mu (float): Gravitational parameter (default is Earth's mu)
+        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    
+    Returns:
+        np.ndarray: Velocity vector in TRN coordinates [v_tangential, v_radial, v_normal]
+    """
+    if element_type == 'coe':
+        mee = coe2mee(elements)
+    elif element_type == 'mee':
+        mee = elements
+    else:
+        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
+    
+    r_vec, v_vec = mee_to_rv(mee, mu)
+    
+    return calculate_trn_velocity(r_vec, v_vec)
+
+def get_altitude(elements, R_earth=RADIUS_OF_EARTH, mu=MU_EARTH, element_type='mee'):
+    """
+    Calculate altitude from orbital elements.
+    
+    Args:
+        elements (np.ndarray): Orbital elements (MEE or COE)
+        R_earth (float): Earth's radius (default is Earth's mean radius)
+        mu (float): Gravitational parameter (default is Earth's mu)
+        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    
+    Returns:
+        float: Altitude above Earth's surface in [m]
+    """
+    if element_type == 'coe':
+        mee = coe2mee(elements)
+    elif element_type == 'mee':
+        mee = elements
+    else:
+        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
+    
+    r_vec, _ = mee_to_rv(mee, mu)
+    
+    return np.linalg.norm(r_vec) - R_earth
+
+def get_position_vector(elements, mu=MU_EARTH, element_type='mee'):
+    """
+    Calculate position vector from orbital elements.
+    
+    Args:
+        elements (np.ndarray): Orbital elements (MEE or COE)
+        mu (float): Gravitational parameter (default is Earth's mu)
+        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    
+    Returns:
+        np.ndarray: Position vector in the inertial frame [x, y, z] in [m]
+    """
+    if element_type == 'coe':
+        mee = coe2mee(elements)
+    elif element_type == 'mee':
+        mee = elements
+    else:
+        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
+    
+    r_vec, _ = mee_to_rv(mee, mu)
+    
+    return r_vec
+
+
+
+
+
+# Test Cases:
+def init_polar_circular_orbit(altitude=450e3):
+    """
+    Initialize Classical Orbital Elements (COE) for a circular polar orbit.
+
+    Args:
+        altitude (float): Orbit altitude in meters. Default is 450 km.
+
+    Returns:
+        np.ndarray: COE [a, e, i, Ω, ω, θ]
+    """
+    a = RADIUS_OF_EARTH + altitude  # Semi-major axis
+    e = 0.0  # Eccentricity (circular orbit)
+    i = np.pi / 2  # Inclination (90 degrees for polar orbit)
+    Ω = 0.0  # Right ascension of the ascending node (arbitrary for polar orbit)
+    ω = 0.0  # Argument of perigee (undefined for circular orbit, set to 0)
+    θ = 0.0  # True anomaly (arbitrary for circular orbit)
+
+    return np.array([a, e, i, Ω, ω, θ])
+
+# Example usage
+if __name__ == "__main__":
+    coe = init_polar_circular_orbit()
+    
+    vel_trn_coe = get_velocity_vector_TRN(coe, MU_EARTH, 'coe')
+    alt_coe = get_altitude(coe, RADIUS_OF_EARTH, MU_EARTH, 'coe')
+    pos_coe = get_position_vector(coe, MU_EARTH, 'coe')
+    
+    print("Using Classical Orbital Elements:")
+    print(f"Velocity TRN components (m/s): Tangential = {vel_trn_coe[0]:.2f}, Radial = {vel_trn_coe[1]:.2f}, Normal = {vel_trn_coe[2]:.2f}")
+    print(f"Altitude: {alt_coe:.2f} m")
+    print(f"Position vector (m): [{pos_coe[0]:.2f}, {pos_coe[1]:.2f}, {pos_coe[2]:.2f}]")
+
+    # Calculate orbital velocity for verification
+    r = RADIUS_OF_EARTH + 450e3
+    v_orbital = np.sqrt(MU_EARTH / r)
+    print(f"\nCalculated orbital velocity: {v_orbital:.2f} m/s")
+
+    # Convert to MEE and repeat calculations
+    mee = coe2mee(coe)
+    vel_trn_mee = get_velocity_vector_TRN(mee, MU_EARTH, 'mee')
+    alt_mee = get_altitude(mee, RADIUS_OF_EARTH, MU_EARTH, 'mee')
+    pos_mee = get_position_vector(mee, MU_EARTH, 'mee')
+    
+    print("\nUsing Modified Equinoctial Elements:")
+    print(f"Velocity TRN components (m/s): Tangential = {vel_trn_mee[0]:.2f}, Radial = {vel_trn_mee[1]:.2f}, Normal = {vel_trn_mee[2]:.2f}")
+    print(f"Altitude: {alt_mee:.2f} m")
+    print(f"Position vector (m): [{pos_mee[0]:.2f}, {pos_mee[1]:.2f}, {pos_mee[2]:.2f}]")

@@ -35,6 +35,7 @@ class IntegratedSimulation:
         num_points_orbit = int((self.params.t_end - self.params.t_start) // self.params.dt_orbit) + 1
         
 
+        # Main integration time loop
         for i in tqdm(range(num_points_attitude)):
             # Define time in terms of smaller timestep - attitude
             t = self.params.t_start + i * self.params.dt_attitude
