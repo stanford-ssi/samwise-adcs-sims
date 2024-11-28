@@ -95,187 +95,267 @@ def mee_dynamics(elements, mu, dt, f_perturbation):
     return A @ f_perturbation + b
 
 
-def mee_to_rv(mee, mu):
-    # Does NOT work for elliptical orbits
-    p, f, g, h, k, L = mee
-    
-    s2 = 1 + h**2 + k**2
-    w = 1 + f * np.cos(L) + g * np.sin(L)
-    r = p / w
-    
-    # Position equations remain the same
-    x = r * ((1 - h**2 + k**2) * np.cos(L) + 2*h*k*np.sin(L) - k)
-    y = r * ((1 + h**2 - k**2) * np.sin(L) + 2*h*k*np.cos(L) + h)
-    z = 2*r * (h*np.sin(L) - k*np.cos(L))
-    
-    sqrt_mu_p = np.sqrt(mu / p)
-    
-    # Modified velocity equations to handle equatorial case
-    vx = -sqrt_mu_p * (-f + g + np.sin(L))  # Added np.sin(L) term
-    vy = -sqrt_mu_p * (-g - f - np.cos(L))  # Added -np.cos(L) term
-    vz = 2*sqrt_mu_p * (f*h*np.sin(L) - g*k*np.cos(L) - (f*k + g*h)/s2)
-    
-    r_vec = np.array([x, y, z])
-    v_vec = np.array([vx, vy, vz])
-    
-    return r_vec, v_vec
-
-
-def calculate_altitude(r_vec, r_earth):
-    """Calculate altitude above Earth's surface."""
-    return np.linalg.norm(r_vec) - r_earth
-
-
-def calculate_trn_velocity(r_vec, v_vec):
-    """Calculate velocity components in the Tangential, Radial, Normal (TRN) frame."""
-    r_unit = r_vec / np.linalg.norm(r_vec)
-    h_vec = np.cross(r_vec, v_vec)
-    n_unit = h_vec / np.linalg.norm(h_vec)
-    t_unit = np.cross(n_unit, r_unit)
-    
-    v_radial = np.dot(v_vec, r_unit)
-    v_tangential = np.dot(v_vec, t_unit)
-    v_normal = np.dot(v_vec, n_unit)
-    
-    return np.array([v_tangential, v_radial, v_normal])
-
-
-def get_velocity_vector_TRN(elements, mu=MU_EARTH, element_type='mee'):
+def coe_to_rv(coe, mu):
     """
-    Calculate velocity vector from orbital elements in TRN coordinates.
+    Convert Classical Orbital Elements (COE) to State Vectors (RV)
     
-    Args:
-        elements (np.ndarray): Orbital elements (MEE or COE)
-        mu (float): Gravitational parameter (default is Earth's mu)
-        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    Parameters:
+    coe : array-like
+        Classical Orbital Elements in the form [a, e, i, Ω, ω, ν]
+        where:
+        a: semi-major axis (km)
+        e: eccentricity
+        i: inclination (degrees)
+        Ω: right ascension of the ascending node (degrees)
+        ω: argument of periapsis (degrees)
+        ν: true anomaly (degrees)
+    mu : float
+        Gravitational parameter (km^3/s^2)
     
     Returns:
-        np.ndarray: Velocity vector in TRN coordinates [v_tangential, v_radial, v_normal]
+    array
+        State vector [x, y, z, vx, vy, vz]
+        where:
+        x, y, z: position components (km)
+        vx, vy, vz: velocity components (km/s)
     """
-    if element_type == 'coe':
-        mee = coe2mee(elements)
-    elif element_type == 'mee':
-        mee = elements
-    else:
-        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
+    a, e, i, Omega, omega, nu = coe
     
-    r_vec, v_vec = mee_to_rv(mee, mu)
+    # Convert degrees to radians
+    i_rad = np.radians(i)
+    Omega_rad = np.radians(Omega)
+    omega_rad = np.radians(omega)
+    nu_rad = np.radians(nu)
     
-    return calculate_trn_velocity(r_vec, v_vec)
+    # Calculate semi-latus rectum
+    p = a * (1 - e**2)
+    
+    # Position in the perifocal coordinate system
+    r_peri = np.array([
+        p * np.cos(nu_rad) / (1 + e * np.cos(nu_rad)),
+        p * np.sin(nu_rad) / (1 + e * np.cos(nu_rad)),
+        0
+    ])
+    
+    # Velocity in the perifocal coordinate system
+    vx_peri = np.sqrt(mu / p) * (-np.sin(nu_rad))
+    vy_peri = np.sqrt(mu / p) * (e + np.cos(nu_rad))
+    vz_peri = 0
+    v_peri = np.array([vx_peri, vy_peri, vz_peri])
+    
+    # Transformation matrix from perifocal to geocentric equatorial frame
+    R = np.array([
+        [np.cos(Omega_rad) * np.cos(omega_rad) - np.sin(Omega_rad) * np.sin(omega_rad) * np.cos(i_rad),
+         -np.cos(Omega_rad) * np.sin(omega_rad) - np.sin(Omega_rad) * np.cos(omega_rad) * np.cos(i_rad),
+         np.sin(Omega_rad) * np.sin(i_rad)],
+        [np.sin(Omega_rad) * np.cos(omega_rad) + np.cos(Omega_rad) * np.sin(omega_rad) * np.cos(i_rad),
+         -np.sin(Omega_rad) * np.sin(omega_rad) + np.cos(Omega_rad) * np.cos(omega_rad) * np.cos(i_rad),
+         -np.cos(Omega_rad) * np.sin(i_rad)],
+        [np.sin(omega_rad) * np.sin(i_rad),
+         np.cos(omega_rad) * np.sin(i_rad),
+         np.cos(i_rad)
+        ]
+    ])
+    
+    # Convert position and velocity to geocentric equatorial frame
+    r = R @ r_peri
+    v = R @ v_peri
+    
+    return np.concatenate((r, v))
 
-def get_altitude(elements, R_earth=RADIUS_OF_EARTH, mu=MU_EARTH, element_type='mee'):
+
+def get_altitude(rv, radius_earth=6371):
     """
-    Calculate altitude from orbital elements.
+    Calculate altitude from state vector
     
-    Args:
-        elements (np.ndarray): Orbital elements (MEE or COE)
-        R_earth (float): Earth's radius (default is Earth's mean radius)
-        mu (float): Gravitational parameter (default is Earth's mu)
-        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    Parameters:
+    rv : array-like
+        State vector [x, y, z, vx, vy, vz]
+    radius_earth : float, optional
+        Radius of the Earth in km (default is 6371 km)
     
     Returns:
-        float: Altitude above Earth's surface in [m]
+    float
+        Altitude in km
     """
-    if element_type == 'coe':
-        mee = coe2mee(elements)
-    elif element_type == 'mee':
-        mee = elements
-    else:
-        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
-    
-    r_vec, _ = mee_to_rv(mee, mu)
-    
-    return np.linalg.norm(r_vec) - R_earth
+    r = rv[:3]
+    return np.linalg.norm(r) - radius_earth
 
-def get_position_vector(elements, mu=MU_EARTH, element_type='mee'):
+def get_velocity(rv):
     """
-    Calculate position vector from orbital elements.
+    Calculate velocity magnitude from state vector
     
-    Args:
-        elements (np.ndarray): Orbital elements (MEE or COE)
-        mu (float): Gravitational parameter (default is Earth's mu)
-        element_type (str): 'mee' for Modified Equinoctial Elements, 'coe' for Classical Orbital Elements
+    Parameters:
+    rv : array-like
+        State vector [x, y, z, vx, vy, vz]
     
     Returns:
-        np.ndarray: Position vector in the inertial frame [x, y, z] in [m]
+    float
+        Velocity magnitude in km/s
     """
-    if element_type == 'coe':
-        mee = coe2mee(elements)
-    elif element_type == 'mee':
-        mee = elements
-    else:
-        raise ValueError("Invalid element_type. Use 'mee' or 'coe'.")
+    v = rv[3:]
+    return np.linalg.norm(v)
+
+
+
+# TEST CASES:
+def assert_close(calculated, expected, tolerance=0.1):
+    """Simple function to check if values are close enough"""
+    if abs(calculated - expected) > tolerance:
+        raise AssertionError(f"Values not close enough: calculated={calculated}, expected={expected}")
+
+def assert_vector_close(calculated, expected, tolerance=0.1):
+    """Check if vector components are close enough"""
+    if not np.allclose(calculated, expected, atol=tolerance):
+        raise AssertionError(f"Vectors not close enough:\ncalculated={calculated}\nexpected={expected}")
+
+def test_circular_polar_orbit():
+    """Test altitude and velocity for a circular polar orbit"""
+    # Constants
+    radius_earth = 6371  # km
+    mu_earth = 398600.4418  # km³/s²
     
-    r_vec, _ = mee_to_rv(mee, mu)
+    # Set up a circular polar orbit at 500 km altitude
+    altitude = 500  # km
+    a = radius_earth + altitude
     
-    return r_vec
-
-
-# Test Cases:
-def init_circular_orbit(altitude=450e3):
-    """
-    Initialize Classical Orbital Elements (COE) for a circular polar orbit.
-
-    Args:
-        altitude (float): Orbit altitude in meters. Default is 450 km.
-
-    Returns:
-        np.ndarray: COE [a, e, i, Ω, ω, θ]
-    """
-    a = RADIUS_OF_EARTH + altitude  # Semi-major axis
-    e = 0.0  # Eccentricity (circular orbit)
-    i = 0.0  # Inclination (90 degrees for polar orbit)
-    Ω = np.pi / 2  # Right ascension of the ascending node (arbitrary for polar orbit)
-    ω = 0.0  # Argument of perigee (undefined for circular orbit, set to 0)
-    θ = 0.0  # True anomaly (arbitrary for circular orbit)
-
-    return np.array([a, e, i, Ω, ω, θ])
-
-def init_elliptical_orbit():
-    # Test case: Highly elliptical equatorial orbit
-    # Perigee: 6678 km (300km altitude)
-    # Apogee: 42164 km (GEO altitude)
-    # Equatorial (i=0), starting at perigee
+    # Classical orbital elements for circular polar orbit
+    # [a, e, i, Ω, ω, ν]
+    coe = np.array([
+        a,              # semi-major axis (km)
+        0.0,           # eccentricity (circular)
+        90.0,          # inclination (degrees) - polar orbit
+        45.0,          # RAAN (degrees) - arbitrary for this test
+        0.0,           # argument of perigee (undefined for circular)
+        0.0            # true anomaly (arbitrary for circular)
+    ])
     
-    rp = 6678000  # perigee radius in meters
-    ra = 42164000  # apogee radius in meters
+    # Convert to state vectors
+    rv = coe_to_rv(coe, mu_earth)
+    
+    # Test altitude
+    calculated_altitude = get_altitude(rv)
+    expected_altitude = altitude
+    assert_close(calculated_altitude, expected_altitude)
+    print(f"Polar orbit altitude test passed: {calculated_altitude:.1f} km")
+    
+    # Test velocity
+    calculated_velocity = get_velocity(rv)
+    expected_velocity = np.sqrt(mu_earth / a)  # circular orbit velocity
+    assert_close(calculated_velocity, expected_velocity)
+    print(f"Polar orbit velocity test passed: {calculated_velocity:.1f} km/s")
+
+def test_elliptical_equatorial_orbit():
+    """Test altitude and velocity for an elliptical equatorial orbit"""
+    # Constants
+    radius_earth = 6371  # km
+    mu_earth = 398600.4418  # km³/s²
+    
+    # Perigee and apogee altitudes
+    perigee_alt = 300  # km
+    apogee_alt = 35793  # km (approximately GEO altitude)
+    
+    rp = radius_earth + perigee_alt
+    ra = radius_earth + apogee_alt
+    a = (rp + ra) / 2
+    e = (ra - rp) / (ra + rp)
     
     # Classical orbital elements
-    a = (rp + ra) / 2  # semi-major axis
-    e = (ra - rp) / (ra + rp)  # eccentricity
-    i = 0.0  # inclination
-    Ω = 0.0  # RAAN
-    ω = 0.0  # argument of perigee
-    θ = 0.0  # true anomaly (starting at perigee)
+    coe = np.array([
+        a,              # semi-major axis (km)
+        e,             # eccentricity
+        0.0,           # inclination (degrees) - equatorial
+        0.0,           # RAAN (degrees)
+        0.0,           # argument of perigee
+        0.0            # true anomaly (starting at perigee)
+    ])
     
-    return np.array([a, e, i, Ω, ω, θ])
-
-# Example usage
-if __name__ == "__main__":
-    # coe = init_circular_orbit()
-    coe = init_elliptical_orbit()
-
-    # vel_trn_coe = get_velocity_vector_TRN(coe, MU_EARTH, 'coe')
-    # alt_coe = get_altitude(coe, RADIUS_OF_EARTH, MU_EARTH, 'coe')
-    # pos_coe = get_position_vector(coe, MU_EARTH, 'coe')
+    # Convert to state vectors
+    rv = coe_to_rv(coe, mu_earth)
     
-    # print("Using Classical Orbital Elements:")
-    # print(f"Velocity TRN components (m/s): Tangential = {vel_trn_coe[0]:.2f}, Radial = {vel_trn_coe[1]:.2f}, Normal = {vel_trn_coe[2]:.2f}")
-    # print(f"Altitude: {alt_coe:.2f} m")
-    # print(f"Position vector (m): [{pos_coe[0]:.2f}, {pos_coe[1]:.2f}, {pos_coe[2]:.2f}]")
-
-    # # Calculate orbital velocity for verification
-    # r = RADIUS_OF_EARTH + 450e3
-    # v_orbital = np.sqrt(MU_EARTH / r)
-    # print(f"\nCalculated orbital velocity: {v_orbital:.2f} m/s")
-
-    # Convert to MEE and repeat calculations
-    mee = coe2mee(coe)
-    vel_trn_mee = get_velocity_vector_TRN(mee, MU_EARTH, 'mee')
-    alt_mee = get_altitude(mee, RADIUS_OF_EARTH, MU_EARTH, 'mee')
-    pos_mee = get_position_vector(mee, MU_EARTH, 'mee')
+    # Test altitude at perigee
+    calculated_altitude = get_altitude(rv)
+    expected_altitude = perigee_alt
+    assert_close(calculated_altitude, expected_altitude)
+    print(f"Equatorial orbit altitude test passed: {calculated_altitude:.1f} km")
     
-    print("\nUsing Modified Equinoctial Elements:")
-    print(f"Velocity TRN components (m/s): Tangential = {vel_trn_mee[0]:.2f}, Radial = {vel_trn_mee[1]:.2f}, Normal = {vel_trn_mee[2]:.2f}")
-    print(f"Altitude: {alt_mee:.2f} m")
-    print(f"Position vector (m): [{pos_mee[0]:.2f}, {pos_mee[1]:.2f}, {pos_mee[2]:.2f}]")
+    # Test velocity at perigee
+    calculated_velocity = get_velocity(rv)
+    expected_velocity = np.sqrt(mu_earth * (2/rp - 1/a))  # vis-viva equation
+    assert_close(calculated_velocity, expected_velocity)
+    print(f"Equatorial orbit velocity test passed: {calculated_velocity:.1f} km/s")
+
+
+def test_molniya_orbit():
+    """Test altitude and velocity for a Molniya-type orbit"""
+    # Constants
+    radius_earth = 6371  # km
+    mu_earth = 398600.4418  # km³/s²
+    
+    # Molniya orbit characteristics
+    perigee_alt = 1000  # km
+    apogee_alt = 39830  # km
+    
+    rp = radius_earth + perigee_alt
+    ra = radius_earth + apogee_alt
+    a = (rp + ra) / 2
+    e = (ra - rp) / (ra + rp)
+    
+    # Classical orbital elements
+    coe = np.array([
+        a,              # semi-major axis (km)
+        e,             # eccentricity
+        63.4,          # inclination (degrees) - critical inclination
+        45.0,          # RAAN (degrees)
+        270.0,         # argument of perigee
+        0.0            # true anomaly (starting at perigee)
+    ])
+    
+    # Convert to state vectors
+    rv = coe_to_rv(coe, mu_earth)
+    
+    # Split into position and velocity components
+    r = rv[:3]
+    v = rv[3:]
+    
+    # Test overall altitude
+    calculated_altitude = get_altitude(rv)
+    expected_altitude = perigee_alt
+    assert_close(calculated_altitude, expected_altitude)
+    print(f"Molniya orbit altitude test passed: {calculated_altitude:.1f} km")
+    
+    # Test position components
+    print("\nPosition components [x, y, z]:")
+    print(f"  {r[0]:.1f}, {r[1]:.1f}, {r[2]:.1f} km")
+    
+    # At perigee with argument of perigee = 270°, the position should be:
+    # - primarily in -z direction (due to argument of perigee)
+    # - tilted by inclination angle
+    # - magnitude should be rp
+    expected_magnitude = rp
+    calculated_magnitude = np.linalg.norm(r)
+    assert_close(calculated_magnitude, expected_magnitude)
+    print(f"Position magnitude test passed: {calculated_magnitude:.1f} km")
+    
+    # Test velocity components
+    print("\nVelocity components [vx, vy, vz]:")
+    print(f"  {v[0]:.1f}, {v[1]:.1f}, {v[2]:.1f} km/s")
+    
+    # Test velocity magnitude at perigee
+    calculated_velocity = np.linalg.norm(v)
+    expected_velocity = np.sqrt(mu_earth * (2/rp - 1/a))  # vis-viva equation
+    assert_close(calculated_velocity, expected_velocity)
+    print(f"Velocity magnitude test passed: {calculated_velocity:.1f} km/s")
+    
+
+if __name__ == '__main__':
+    print("\nTesting circular polar orbit:")
+    test_circular_polar_orbit()
+    
+    print("\nTesting elliptical equatorial orbit:")
+    test_elliptical_equatorial_orbit()
+    
+    print("\nTesting Molniya orbit:")
+    test_molniya_orbit()
+    
+    print("\nAll tests passed!")
