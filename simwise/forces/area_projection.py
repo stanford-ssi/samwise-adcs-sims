@@ -362,7 +362,7 @@ def test_projected_area():
 
 if __name__ == "__main__":
     # Run test cases
-    
+     
     # Uncomment below line to do tests on simple cube rotation:
     test_projected_area_simple_cube() 
     

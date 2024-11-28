@@ -70,3 +70,53 @@ def dragPertubationTorque(params, e_angles, velocity, altitude):
 def drag_coefficient():
     Cd = 2.0
     return Cd
+
+
+import numpy as np
+from simwise.data_structures.parameters import Parameters
+
+def init():
+    # Create a Parameters object
+    params = Parameters()
+    
+    # Set up test cases
+    test_cases = [
+        {
+            "name": "Low altitude, low velocity",
+            "e_angles": np.array([0, 0, 0]),
+            "velocity": np.array([1000, 0, 0]),
+            "altitude": 200000  # 200 km
+        },
+        {
+            "name": "Medium altitude, medium velocity",
+            "e_angles": np.array([np.pi/2, 0, 0]),
+            "velocity": np.array([7600, 0, 0]),
+            "altitude": 450000  # 450 km
+        },
+        {
+            "name": "High altitude, high velocity",
+            "e_angles": np.array([np.pi/2, np.pi/2, np.pi/2]),
+            "velocity": np.array([0, 0, 8000]),
+            "altitude": 800000  # 800 km
+        }
+    ]
+    
+    # Run test cases
+    for case in test_cases:
+        print(f"\nTest Case: {case['name']}")
+        torque = dragPertubationTorque(params, case['e_angles'], case['velocity'], case['altitude'])
+        
+        print(f"Euler Angles: {case['e_angles']}")
+        print(f"Velocity: {case['velocity']} m/s")
+        print(f"Altitude: {case['altitude']} m")
+        print("Drag Perturbation Torque:")
+        print("  Low Solar Activity:    ", torque[0])
+        print("  Low Solar Activity - MAGNITUDE:    ", np.linalg.norm(torque[0]))
+        print("  Medium Solar Activity: ", torque[1])
+        print("  Medium Solar Activity - MAGNITUDE:    ", np.linalg.norm(torque[1]))
+        print("  High Solar Activity:   ", torque[2])
+        print("  High Solar Activity - MAGNITUDE:    ", np.linalg.norm(torque[2]))
+        
+
+if __name__ == "__main__":
+    init()

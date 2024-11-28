@@ -43,7 +43,7 @@ class SatelliteState:
     
     # Inertial Variables:
     # Velocity Components of Satellite on Orbit
-    v_vec_trn: np.ndarray # [m/s]   shape(3,n)   - V vector in TRN (Tangential, Radial, Normal)
+    v_vec_trn: np.ndarray # [m/s]   shape(,n)   - V vector magnitude in TRN
     # Radial Components of Satellite Position on Orbit
     r_vec: np.ndarray     # [m]  shape(3,n)     - R position vector - {x,y,z}
     # Satellite altitude (wrt non-J2 Earth)
@@ -145,9 +145,8 @@ class SatelliteState:
         self.orbit_keplerian = mee2coe(self.orbit_mee)
         
         # Solve for Velocity, Position and Altitude at this Orbital Time Step
-        self.v_vec_trn = get_velocity_vector_TRN(self.orbit_mee)
-        self.r_vec = get_position_vector(self.orbit_mee)
-        self.h = get_altitude(self.orbit_mee)
+        self.v_vec_trn = get_velocity(coe_to_rv(mee2coe(self.orbit_mee)))
+        self.h = get_altitude(coe_to_rv(mee2coe(self.orbit_mee)))
         
         
         
@@ -156,7 +155,7 @@ class SatelliteState:
         ''' Solve directly for pertubation torques in one call'''
         
         # Solve for the Drag:
-        self.Drag = dragPertubationTorque(Parameters, self.e_angles, self.v_vec_trn[0], self.h)
+        self.Drag = dragPertubationTorque(Parameters, self.e_angles, self.v_vec_trn, self.h)
         
         
         

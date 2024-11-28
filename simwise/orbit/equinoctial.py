@@ -95,7 +95,7 @@ def mee_dynamics(elements, mu, dt, f_perturbation):
     return A @ f_perturbation + b
 
 
-def coe_to_rv(coe, mu):
+def coe_to_rv(coe, mu = MU_EARTH):
     """
     Convert Classical Orbital Elements (COE) to State Vectors (RV)
     
@@ -216,7 +216,7 @@ def test_circular_polar_orbit():
     mu_earth = 398600.4418  # km³/s²
     
     # Set up a circular polar orbit at 500 km altitude
-    altitude = 500  # km
+    altitude = 450  # km
     a = radius_earth + altitude
     
     # Classical orbital elements for circular polar orbit
