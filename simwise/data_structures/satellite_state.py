@@ -151,11 +151,11 @@ class SatelliteState:
         
         
         
-    def calculate_pertubation_forces(self):
+    def calculate_pertubation_forces(self, params):
         ''' Solve directly for pertubation torques in one call'''
         
         # Solve for the Drag:
-        self.Drag = dragPertubationTorque(Parameters, self.e_angles, self.v_vec_trn, self.h)
+        self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
         
         
         
