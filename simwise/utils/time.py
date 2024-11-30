@@ -1,30 +1,59 @@
 import re
 import datetime
+import numpy as np
+import math
 
-def julian_date_from_timestamp(timestamp):
-    """
-    Convert a timestamp like 'A.D. 2024-Nov-29 00:00:00.0000 TDB' to Julian Date.
-    """
-    # Extract the date and time components
-    match = re.search(r"(\d{4})-(\w{3})-(\d{2}) (\d{2}:\d{2}:\d{2})", timestamp)
-    if not match:
-        raise ValueError(f"Invalid timestamp format: {timestamp}")
+def jd_to_dt_utc(JD):
+    Q = JD+0.5
+    Z = np.floor(Q)
+    W = np.floor((Z - 1867216.25)/36524.25)
+    X = np.floor(W/4)
+    A = Z+1+W-X
+    B = A+1524
+    C = np.floor((B-122.1)/365.25)
+    D = np.floor(365.25*C)
+    E = np.floor((B-D)/30.6001)
+    F = np.floor(30.6001*E)
+    day = np.floor(B-D-F+(Q-Z))
+    if 1 <= (E-1) <= 12:
+        month = E-1
+    else:
+        month = E-13
     
-    year, month_str, day, time_str = match.groups()
+    if month <= 2:
+        year = C-4715
+    else:
+        year = C-4716
+    
+    dt = datetime.datetime(int(year), int(month), int(day))
+    fractional_days = days=JD - np.floor(JD)
 
-    # Convert month abbreviation to number
-    month_map = {
-        "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-        "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12
-    }
-    month = month_map[month_str]
+    #XXX This is a hack to correct the time
+    dt += datetime.timedelta(float(fractional_days) - 0.5)
+    
+    return dt
 
-    # Parse the time
-    hour, minute, second = map(int, time_str.split(":"))
 
-    # Convert to datetime
-    dt = datetime.datetime(int(year), month, int(day), hour, minute, second)
+def dt_utc_to_jd(utc_time):
+    """Convert UTC time to Julian date.
 
-    # Convert to Julian Date
-    JD = dt.toordinal() + 1721424.5 + (hour + minute / 60 + second / 3600) / 24
-    return JD
+    This calculation is only valid for days after March 1900.
+
+    Args:
+        utc_time (datetime): The observation time as a datetime object
+
+    Returns:
+        julian_date (float): The observation time as a julian date.
+    """
+    year, month, day = utc_time.year, utc_time.month, utc_time.day
+    julian_date = (
+        367 * year - 7 * (year + (month + 9) // 12) // 4 + 275 * month // 9 + day + 1721013.5
+    )
+
+    # update with the frational day
+    julian_date +=  (
+        utc_time.hour + utc_time.minute / 60 
+        + (utc_time.second + 1e-6 * utc_time.microsecond) / 3600 
+    ) / 24
+
+    return julian_date

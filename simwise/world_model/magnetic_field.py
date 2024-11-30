@@ -24,6 +24,8 @@ def magnetic_field(lat, lon, alt):
     # First ensure IGRF is built
     try:
         igrf.build()
+    except AttributeError as e:
+        igrf.base.build()
     except Exception as e:
         print(f"Error building IGRF: {str(e)}")
         return None

@@ -58,7 +58,65 @@ def plot_states_plotly(states: list[SatelliteState],
 
     return fig
 
-def plot3D(position_history):
+def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
+    """
+    Plots N subplots with shared X-axis using Plotly graph objects.
+
+    Parameters:
+    Y (numpy.ndarray): A 2D array of shape (N, T) containing the Y data for each subplot.
+    X (numpy.ndarray): A 1D array of length T containing the shared X-axis data.
+    titles (list): A list of titles for each Y-axis (one for each subplot).
+
+    Returns:
+    plotly.graph_objects.Figure: The resulting Plotly figure with subplots.
+    """
+    
+    if len(Y.shape) != 2:
+        Y = Y[..., np.newaxis]
+    T, N = Y.shape
+
+    # Create subplots with shared X-axis
+    fig = make_subplots(
+        rows=N,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.02,
+    )
+
+    # Add traces for each subplot
+    for i in range(N):
+        fig.add_trace(
+            go.Scatter(
+                x=X,
+                y=Y[:, i],
+                mode='lines',
+                name=y_axis_titles[i]
+            ),
+            row=i + 1,
+            col=1
+        )
+        # Set Y-axis title for each subplot
+        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1)
+
+    # Update layout
+    fig.update_layout(
+        height=300 * N,  # Adjust the height accordingly
+        showlegend=True,
+        title=plot_title
+    )
+    # Set X-axis title only on the bottom subplot
+    fig.update_xaxes(title_text=x_axis_title, row=N, col=1)
+
+    # Display the figure
+    if save:
+        fig.write_image(plot_title)
+    else:
+        fig.show()
+
+    return fig
+
+
+def plot_3D(position_history):
 
     # Separate the components into x, y, and z
     x = position_history[:, 0]
@@ -98,177 +156,3 @@ def plot3D(position_history):
     
     # Show the plot
     fig.show()
-
-def plot_position_over_jd(positions, julian_dates, save_as=None):
-    """
-    Plot X, Y, Z positions over Julian Dates in subplots.
-
-    Parameters:
-        julian_dates (list or np.array): Array of Julian Dates.
-        positions (list or np.array): Nx3 array of positions [X, Y, Z].
-        save_as (str, optional): File path to save the plot as an image (e.g., 'position_plot.png').
-    """
-    # Extract X, Y, Z components
-    x_positions = positions[:, 0]
-    y_positions = positions[:, 1]
-    z_positions = positions[:, 2]
-    
-    # Create subplots
-    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, 
-                        subplot_titles=("X Position", "Y Position", "Z Position"))
-    
-    # Add X positions
-    fig.add_trace(go.Scatter(
-        x=julian_dates,
-        y=x_positions,
-        mode='lines+markers',
-        name="X Position"
-    ), row=1, col=1)
-
-    # Add Y positions
-    fig.add_trace(go.Scatter(
-        x=julian_dates,
-        y=y_positions,
-        mode='lines+markers',
-        name="Y Position"
-    ), row=2, col=1)
-
-    # Add Z positions
-    fig.add_trace(go.Scatter(
-        x=julian_dates,
-        y=z_positions,
-        mode='lines+markers',
-        name="Z Position"
-    ), row=3, col=1)
-
-    # Update layout
-    fig.update_layout(
-        title="Position Over Julian Dates",
-        xaxis_title="Julian Date",
-        yaxis_title="Position",
-        height=800,  # Adjust height for better visibility
-        showlegend=False  # Legend is unnecessary since each subplot is labeled
-    )
-    
-    # Show the plot
-    fig.show()
-    
-    # Save the plot as an image if requested
-    if save_as:
-        fig.write_image(save_as)
-        print(f"Plot saved as {save_as}")
-
-def plotJD(julian_dates, save_as=None):
-    """
-    Plot Julian Dates using the array index as the x-axis.
-
-    Parameters:
-        julian_dates (list or np.array): Array of Julian Dates to plot.
-        save_as (str, optional): File path to save the plot as an image (e.g., 'jd_plot.png').
-    """
-    # Use the index of the array as the x-axis
-    indices = np.array(range(len(julian_dates)))
-    
-    # Create the line plot
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=indices,
-        y=julian_dates,
-        mode='lines+markers',
-        name="Julian Date",
-        line=dict(width=2),
-        marker=dict(size=6)
-    ))
-    
-    # Add labels and title
-    fig.update_layout(
-        title="Julian Dates Over Index",
-        xaxis_title="Index",
-        yaxis_title="Julian Date",
-        margin=dict(l=20, r=20, t=40, b=20),
-    )
-
-    # Show the plot
-    fig.show()
-    
-    # Save the plot as an image if requested
-    if save_as:
-        fig.write_image(save_as)
-        print(f"Plot saved as {save_as}")
-
-
-def plotJD(julian_dates, save_as=None):
-    """
-    Plot Julian Dates using the array index as the x-axis.
-
-    Parameters:
-        julian_dates (list or np.array): Array of Julian Dates to plot.
-        save_as (str, optional): File path to save the plot as an image (e.g., 'jd_plot.png').
-    """
-    # Use the index of the array as the x-axis
-    indices = np.array(range(len(julian_dates)))
-    
-    # Create the line plot
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=indices,
-        y=julian_dates,
-        mode='lines+markers',
-        name="Julian Date",
-        line=dict(width=2),
-        marker=dict(size=6)
-    ))
-    
-    # Add labels and title
-    fig.update_layout(
-        title="Julian Dates Over Index",
-        xaxis_title="Index",
-        yaxis_title="Julian Date",
-        margin=dict(l=20, r=20, t=40, b=20),
-    )
-
-    # Show the plot
-    fig.show()
-    
-    # Save the plot as an image if requested
-    if save_as:
-        fig.write_image(save_as)
-        print(f"Plot saved as {save_as}")
-
-def plot_single(y, julian_dates, save_as=None):
-    """
-    Plot Julian Dates using the array index as the x-axis.
-
-    Parameters:
-        julian_dates (list or np.array): Array of Julian Dates to plot.
-        save_as (str, optional): File path to save the plot as an image (e.g., 'jd_plot.png').
-    """
-    # Use the index of the array as the x-axis
-    indices = np.array(range(len(julian_dates)))
-    
-    # Create the line plot
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=julian_dates,
-        y=y,
-        mode='lines+markers',
-        name="Error [°]",
-        line=dict(width=2),
-        marker=dict(size=6)
-    ))
-    
-    # Add labels and title
-    fig.update_layout(
-        title="",
-        xaxis_title="Index",
-        yaxis_title="Error between Approximation and JPL Horizons [°]",
-        margin=dict(l=20, r=20, t=40, b=20),
-    )
-
-    # Show the plot
-    fig.show()
-    
-    # Save the plot as an image if requested
-    if save_as:
-        fig.write_image(save_as)
-        print(f"Plot saved as {save_as}")

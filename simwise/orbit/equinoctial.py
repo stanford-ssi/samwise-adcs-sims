@@ -46,6 +46,21 @@ def mee2coe(elements):
     return np.array([a, e, i, Ω, ω, θ])
 
 
+def rv2lla(rv):
+    """Convert state vector to latitude, longitude, and altitude.
+
+    Args:
+        rv (_type_): _description_
+    """
+    r = rv[:3]
+    x = r[0]
+    y = r[1]
+    z = r[2]
+    r = np.linalg.norm(r)
+    lat = np.arcsin(z / r)
+    lon = np.arctan2(y, x)
+    alt = r - R_EARTH
+    return np.array([lat, lon, alt])
 
 
 def mee_dynamics(elements, mu, dt, f_perturbation):

@@ -1,6 +1,7 @@
 import numpy as np
 from simwise.math.quaternion import quaternion_multiply, euler2quaternion
-
+from simwise.utils.time import dt_utc_to_jd
+import datetime
 import numpy as np
 
 class Parameter:
@@ -68,6 +69,7 @@ class Parameters:
         # Time parameters
         self.dt_orbit = ScalarParameter(1)
         self.dt_attitude = ScalarParameter(0.1)
+        self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
         self.t_start = ScalarParameter(0)
         self.t_end = ScalarParameter(60)
 

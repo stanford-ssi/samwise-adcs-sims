@@ -13,8 +13,9 @@ CUBESAT_WIDTH = 0.10                    # m
 SOLARPANEL_HEIGHT = CUBESAT_HEIGHT      # m
 SOLARPANEL_WIDTH = CUBESAT_WIDTH * 2    # m
 
-
 # Satellite Aerodyamic Properties:
 # Defined looking at the satellite with the solar-panel deployed in max area config
 MAX_WETTED_AREA = (2 * SOLARPANEL_WIDTH + CUBESAT_WIDTH * np.sqrt(2)) * SOLARPANEL_HEIGHT
 
+# Time Properties
+TDB_TO_UTC_OFFSET = -69.184             # s

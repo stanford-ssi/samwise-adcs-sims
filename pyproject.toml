@@ -31,7 +31,8 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "flake8>=4.0",
-    "mypy>=0.950"
+    "mypy>=0.950",
+    "pyerfa>=2.0.0",
 ]
 
 [tool.setuptools]
