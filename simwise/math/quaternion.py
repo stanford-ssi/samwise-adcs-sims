@@ -31,7 +31,7 @@ def quaternion_multiply(q1, q2):
     y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
     z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
 
-    return np.array([w, x, y, z])
+    return normalize_quaternion(np.array([w, x, y, z]))
 
 
 def quaternion_inverse(q):
@@ -68,6 +68,27 @@ def quaternion2euler(q, sequence="zyx"):
         theta = np.arcsin(2*(q1*q3 - q4*q2))
         psi = np.arctan2(2*(q1*q4 + q2*q3), 1 - 2*(q3**2 + q4**2))
         return np.array([phi, theta, psi])
+    else:
+        raise ValueError("Invalid sequence")
+
+def euler2quaternion(euler_angles, sequence="zyx"):
+    """Transform euler angles to a quaternion.
+
+    NOTE: only supports zyx sequence.
+
+    Args:
+        euler_angles (np.ndarray): euler angles of form [phi, theta, psi]
+        sequence (str): sequence of euler angles, default is "zyx"
+    """
+    phi = euler_angles[0]
+    theta = euler_angles[1]
+    psi = euler_angles[2]
+    if sequence == "zyx":
+        q1 = np.cos(phi/2)*np.cos(theta/2)*np.cos(psi/2) + np.sin(phi/2)*np.sin(theta/2)*np.sin(psi/2)
+        q2 = np.sin(phi/2)*np.cos(theta/2)*np.cos(psi/2) - np.cos(phi/2)*np.sin(theta/2)*np.sin(psi/2)
+        q3 = np.cos(phi/2)*np.sin(theta/2)*np.cos(psi/2) + np.sin(phi/2)*np.cos(theta/2)*np.sin(psi/2)
+        q4 = np.cos(phi/2)*np.cos(theta/2)*np.sin(psi/2) - np.sin(phi/2)*np.sin(theta/2)*np.cos(psi/2)
+        return np.array([q1, q2, q3, q4])
     else:
         raise ValueError("Invalid sequence")
 
