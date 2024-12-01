@@ -11,6 +11,49 @@ DERIVATIVE_MATRIX = np.array([
     [0.0, 0.0, 0.0]
 ])
 
+def generate_ecef_pn_table(epoch_jd, t_end_seconds):
+    """
+    Generate the table for the nutation and precession matrices based on simulation
+    epoch and duration. Generate an entry for every 10 days.
+    """
+    year_pn_table = {}
+    # nearest 10 days before start of sim
+    start = int(epoch_jd // 10 * 10)
+    duration_days = t_end_seconds / 86400
+
+    # nearest 10 days after end of sim
+    end = int((epoch_jd + duration_days) // 10 * 10 + 10)
+
+    for i, jd_waypoint in enumerate(range(start, end, 10)):
+        pn_matrix = precession_nutation_matrix(jd_waypoint)
+        year_pn_table[jd_waypoint] = pn_matrix
+    return year_pn_table
+
+def get_ecef_pn_matrix(year_pn_table, jd):
+    """
+    Get the precession/nutation matrix for a given Julian date.
+    """
+    jd = jd // 10 * 10
+    return year_pn_table[jd]
+
+def eci_to_ecef_tabular(eci_point: NDArray[np.float64], jd: float) -> NDArray[np.float64]:
+    """Convert ECI point to ECEF point using tabular values.
+
+    Args:
+        eci_point (NDArray[np.float64]): (3,) 1-d vector describing ECI point [X, Y, Z]
+        jd (float): Julian Date
+
+    Returns:
+        ecef_point (NDArray[np.float64]): (3,) 1-d vector describing ECEF point [X, Y, Z]
+    """
+    # Get the rotation matrix
+    rotation_eci_to_ecef = rotation_matrix(jd)
+
+    # Rotate the position
+    ecef_point = rotation_eci_to_ecef @ eci_point
+
+    return ecef_point
+
 
 def eci_to_ecef(
     eci_point: NDArray[np.float64],
@@ -261,16 +304,12 @@ moon_ascension = np.polynomial.polynomial.Polynomial(
     [450160.398036, -6962890.5431, 7.4722]
 )
 
-
-
-def eci_to_lat_long_altitude(position_eci, JD):
-    """Convert ECI to LLA using WGS84
+def ECEF_to_topocentric(position):
+    """Convert state vector to latitude, longitude, and altitude.
 
     Args:
-        position (_type_): _description_
+        rv (_type_): _description_
     """
-    position = eci_to_ecef(JD) @ position_eci
-
     # WGS84 constants
     a = 6378137.0  # Semi-major axis (meters)
     f = 1 / 298.257223563  # Flattening
@@ -294,6 +333,16 @@ def eci_to_lat_long_altitude(position_eci, JD):
 
     return np.degrees(latitude), np.degrees(longitude), altitude
 
+def ECI_to_topocentric(position_eci, JD):
+    """Convert ECI to LLA using WGS84
+
+    Args:
+        position (_type_): _description_
+    """
+    position = eci_to_ecef(position_eci)
+
+    
+
 
 def ecliptic_to_equatorial():
     """
@@ -306,3 +355,4 @@ def ecliptic_to_equatorial():
         [0, np.sin(epsilon), np.cos(epsilon)]
     ])
     return rotation_matrix
+

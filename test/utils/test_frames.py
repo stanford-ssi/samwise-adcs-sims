@@ -29,7 +29,7 @@ def ecef_to_eci_IAU(eci_vector, dt_utc):
     # Convert UTC to UT1
     ut11, ut12 = erfa.utcut1(jd_utc[0], jd_utc[1], dut1)
     
-    # Polar motion coordinates in radians (replace with actual values for higher accuracy)
+    # Polar motion coordinates in radians (TODO replace with actual values for higher accuracy)
     xp = 0.0
     yp = 0.0
     
@@ -74,3 +74,10 @@ def test_display_differences_in_conversion_methods():
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [geneci]")
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_table, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only with table for nutation/precession]")
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_rotation_only, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only]")
+
+def test_ecef_pn_matrix():
+    jd = dt_utc_to_jd(datetime(2021, 1, 1))
+    t_end_seconds = 20 * 24 * 3600
+    pn_table = frames.generate_ecef_pn_table(jd, t_end_seconds)
+    assert len(pn_table) == 3
+    

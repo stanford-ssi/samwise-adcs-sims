@@ -61,17 +61,49 @@ class SatelliteState:
         # Use this only for attitude
         self.t = self.t + dt
 
-    def propagate_attitude_control(self, params: Parameters):
-        """Update this state to represent advancing attitude"""
+    ###———————————————————————————————————————————————————————————————————————###
+    ###                      BEGIN Flight Computer Model                      ###
+    ###———————————————————————————————————————————————————————————————————————###
+    def compute_control_torque(self, params: Parameters):
+        """Compute the desired control torque for the current state\
+            
+        """
         x_attitude = np.hstack((self.q, self.w))
         x_attitude_desired = np.hstack((self.q_d, self.w_d))
 
         self.error_angle = angle_axis_between(self.q, self.q_d)[0]
-        self.control_torque = compute_control_torque(x_attitude,
+        if self.control_mode == "PD":
+            self.desired_control_torque = compute_control_torque(x_attitude,
                                                      x_attitude_desired,
                                                      params.K_p,
                                                      params.K_d,
                                                      tau_max=params.max_torque)
+        elif self.control_mode == "BDOT":
+            tau, mu = bdot_bang_bang(x_attitude, self.B, params.mu_max)
+            self.desired_control_torque = tau
+            self.mu = mu
+            # tau, mu = bdot_step_bang_bang(x_attitude, self.B, params.mu_max)
+            # tau, mu = bdot_proportional(x_attitude, self.B, params.mu_max)
+        else:
+            raise ValueError(f"Unknown control mode '{self.control_mode}'")
+
+    def allocate_control_torque(self, params: Parameters):
+        #TODO: Implement a control allocation algorithm
+        if self.allocation_mode == "MagicActuators":
+            self.control_torque = self.desired_control_torque
+        else:
+            raise ValueError(f"Unknown control allocation mode '{self.allocation_mode}'")
+        
+    ###———————————————————————————————————————————————————————————————————————###
+    ###                       END Flight Computer Model                       ###
+    ###———————————————————————————————————————————————————————————————————————###
+
+    ###———————————————————————————————————————————————————————————————————————###
+    ###                       BEGIN Ground Truth Dynamics Model               ###
+    ###———————————————————————————————————————————————————————————————————————###
+    def propagate_attitude(self, params: Parameters):
+        """Update this state to represent advancing attitude"""
+        x_attitude = np.hstack((self.q, self.w))
 
         def attitude_ode(t, x):
             return attitude_dynamics(x_attitude, params.dt_attitude, params.inertia, self.control_torque)
@@ -89,42 +121,6 @@ class SatelliteState:
         self.q = x_attitude_new[:4]                                 # Quaternion
         self.w = x_attitude_new[4:]                                 # Angular Velocity
         self.e_angles = quaternion2euler(self.q, sequence="zyx")    # Euler Angles
-        
-
-
-    def propagate_attitude_bdot(self, params: Parameters):
-        """Update this state to reflect one cycle of B-dot detumbling"""
-        x_attitude = np.hstack((self.q, self.w))
-
-        tau, mu = bdot_bang_bang(x_attitude, self.B, params.mu_max)
-        # tau, mu = bdot_step_bang_bang(x_attitude, self.B, params.mu_max)
-        # tau, mu = bdot_proportional(x_attitude, self.B, params.mu_max)
-
-        tau, mu = bdot_pid(x_attitude, self.B, params.mu_max)
-
-        self.control_torque = tau
-        self.mu = mu
-
-        # Propagate dynamics
-        def attitude_ode(t, x):
-            return attitude_dynamics(x, params.dt_attitude, params.inertia, self.control_torque)
-
-        sol = solve_ivp(
-            attitude_ode,
-            [self.t, self.t + params.dt_attitude],
-            x_attitude,
-            method='RK45'
-        )
-
-        x_attitude_new = sol.y[:, -1]
-        
-        
-        # Derive Attitude State Information:
-        self.q = x_attitude_new[:4]                                 # Quaternion
-        self.w = x_attitude_new[4:]                                 # Angular Velocity
-        self.e_angles = quaternion2euler(self.q, sequence="zyx")    # Euler Angles
-        
-        
 
     def propagate_orbit(self, params: Parameters):
         """Update this state to represent advancing orbit"""
@@ -142,20 +138,20 @@ class SatelliteState:
 
         # Solve for the MEE and Keplerian Orbital States
         self.orbit_mee = sol.y[:, -1]
+        self.orbit_mee[5] = self.orbit_mee[5] % (2 * np.pi)
         self.orbit_keplerian = mee2coe(self.orbit_mee)
+        self.orbit_keplerian[5] = self.orbit_keplerian[5] % (2 * np.pi)
         
         # Solve for Velocity, Position and Altitude at this Orbital Time Step
         self.v_vec_trn = get_velocity(coe_to_rv(mee2coe(self.orbit_mee)))
         self.h = get_altitude(coe_to_rv(mee2coe(self.orbit_mee)))
-        
-        
-        
-        
+
     def calculate_pertubation_forces(self, params):
         ''' Solve directly for pertubation torques in one call'''
         
         # Solve for the Drag:
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
-        
-        
+    ###———————————————————————————————————————————————————————————————————————###
+    ###                       END Ground Truth Dynamics Model                 ###
+    ###———————————————————————————————————————————————————————————————————————###
         

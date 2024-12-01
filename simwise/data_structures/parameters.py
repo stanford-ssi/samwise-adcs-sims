@@ -1,6 +1,7 @@
 import numpy as np
 from simwise.math.quaternion import quaternion_multiply, euler2quaternion
 from simwise.utils.time import dt_utc_to_jd
+from simwise.math.frames import generate_ecef_pn_table
 import datetime
 import numpy as np
 
@@ -66,22 +67,29 @@ class Parameters:
         Args:
             **overrides: Key-value pairs where keys are parameter names and values are Parameter instances.
         """
+        # Simulation configuration
+        self.num_dispersions = 20
+
         # Time parameters
-        self.dt_orbit = ScalarParameter(1)
-        self.dt_attitude = ScalarParameter(0.1)
+        self.dt_orbit = 1
+        self.dt_attitude = 0.1
         self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
-        self.t_start = ScalarParameter(0)
-        self.t_end = ScalarParameter(60)
+        self.t_start = 0
+        self.t_end = 60
 
         # Inertia and controls
         self.inertia = ArrayParameter(
             [0.01461922201, 0.0412768466, 0.03235309961]
         )
-        self.K_p = ScalarParameter(0.0005) #mean=0.0005, variance=1e-6)
-        self.K_d = ScalarParameter(0.005)# mean=0.005, variance=1e-5)
+        self.K_p = 0.0005
+        self.K_d = 0.005
         self.max_torque = ScalarParameter(0.0032)
         self.noise_torque = ScalarParameter(0.00000288)
         self.mu_max = ScalarParameter(0.03)
+
+        # Control mode and allocation mode —— These are not dispersed
+        self.control_mode = "PD"
+        self.allocation_mode = "MagicActuators"
 
         # Initial orbit properties
         self.a = ScalarParameter(7000e3)
@@ -94,19 +102,22 @@ class Parameters:
         # Attitude initial conditions
         self.q_initial = QuaternionParameter([1, 0, 0, 0]) #variance=(0.05, 0.05, 0.05))
         self.w_initial = ArrayParameter([0.0, 0.2, 0.1]) #mean=[0.0, 0.2, 0.1], variance=1e-4)
-        self.q_desired = QuaternionParameter([0.5, 0.5, 0.5, 0.5])
-        self.w_desired = ArrayParameter([0, 0, 0])
+        self.q_desired = [0.5, 0.5, 0.5, 0.5]
+        self.w_desired = [0, 0, 0]
 
         # Satellite Cp and Cg
         self.Cp = ArrayParameter([0, 0, 0])
         self.Cg = ArrayParameter([20 / 4, 10 * np.sqrt(2) / 2, 10 * np.sqrt(2) / 2])
 
+        # Generate ECEF to PN table
+        # This is NOT a regular parameter of the table, and should not be dispersed
+        self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)
+
         # Apply overrides
+        self.overrides = overrides
         for key, value in overrides.items():
             if not hasattr(self, key):
                 raise ValueError(f"Unknown parameter '{key}' in overrides.")
-            if not isinstance(value, (ScalarParameter, ArrayParameter, QuaternionParameter)):
-                raise ValueError(f"Override for '{key}' must be an instance of ScalarParameter, ArrayParameter, or QuaternionParameter.")
             setattr(self, key, value)
 
     def generate_dispersions(self, N):
@@ -148,8 +159,12 @@ class Parameters:
                         elif isinstance(param, ArrayParameter):
                             dispersed_params[attr] = ArrayParameter(dispersed_value, mean=param.mean, variance=param.variance)
 
+            # Merge dispersed parameters with overrides
+            # Value from the right side (i.e. dipersion) takes precedence
+            merged_overrides = self.overrides | dispersed_params
+
             # Create a new Parameters instance with dispersed parameters
-            dispersed_instances.append(Parameters(**dispersed_params))
+            dispersed_instances.append(Parameters(**merged_overrides))
 
         return dispersed_instances
 

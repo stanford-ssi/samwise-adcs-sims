@@ -1,7 +1,7 @@
 # Main entry point for running simulations
 import argparse
 
-from simwise.simulations import simulate_attitude
+from simwise.simulations import attitude_only
 
 if __name__ == '__main__':
     # Parse arguments

@@ -46,23 +46,6 @@ def mee2coe(elements):
     return np.array([a, e, i, Ω, ω, θ])
 
 
-def rv2lla(rv):
-    """Convert state vector to latitude, longitude, and altitude.
-
-    Args:
-        rv (_type_): _description_
-    """
-    r = rv[:3]
-    x = r[0]
-    y = r[1]
-    z = r[2]
-    r = np.linalg.norm(r)
-    lat = np.arcsin(z / r)
-    lon = np.arctan2(y, x)
-    alt = r - R_EARTH
-    return np.array([lat, lon, alt])
-
-
 def mee_dynamics(elements, mu, dt, f_perturbation):
     """ Do rigid body dyamics of a body in MEE
 
@@ -80,32 +63,24 @@ def mee_dynamics(elements, mu, dt, f_perturbation):
     k = elements[4]
     L = elements[5]
 
-    a = p / (1 - f**2 - g**2)
-    e = np.sqrt(f**2 + g**2)
-    i = np.arctan2(2 * np.sqrt(h**2 + k**2), 1 - h**2 - k**2)
-    Ω = np.arctan2(k, h)
-    ω = np.arctan2(g, f) - L
-    θ = L - Ω - ω
-    s = (1+h**2+k**2)**0.5
-    
+    cosL = np.cos(L)
+    sinL = np.sin(L)
+    w = 1 + f*cosL+g*sinL
+    root_p_µ = np.sqrt(p/mu)
+    s_2 = 1 + h**2 + k**2
+
+    # calculate matrix
     A = np.array([
-        [0, ((2*p)/ω)*(p/mu)**0.5, 0],
-        [((p/mu)**0.5)*np.sin(L), ((p/mu)**0.5)*(1/ω)*((ω+1)*np.cos(L) + f), -(p/mu)**0.5*(g/ω)*(h*np.sin(L) - k*np.cos(L))],
-        [-((p/mu)**0.5)*np.cos(L), ((p/mu)**0.5)*(1/ω)*((ω+1)*np.sin(L)+g), ((p/mu)**0.5)*(f/ω)*(h*np.sin(L) - k*np.cos(L))],
-        [0, 0, ((p/mu)**0.5)*(s**2*np.cos(L))/(2*ω)],
-        [0, 0, ((p/mu)**0.5)*(s**2*np.sin(L))/(2*ω)],
-        [0, 0, ((p/mu)**0.5)*(1/ω)*(h*np.sin(L) - k*np.cos(L))]
+        [0,     2*(p/w),               0                     ],
+        [sinL,  (1/w)*((w+1.)*cosL+f), -(g/w)*(h*sinL-k*cosL)],
+        [-cosL, ((w+1.)*sinL+g)/w,     (f/w)*(h*sinL+k*cosL) ],
+        [0,     0,                     (s_2*cosL)/(2*w)      ],
+        [0,     0,                     (s_2*sinL)/(2*w)      ],
+        [0,     0,                     ((h*sinL-k*cosL)/w)   ]
     ])
 
-    b = np.array([
-        0,
-        0,
-        0,
-        0,
-        0,
-        np.sqrt(mu*p)*(ω/p)**2
-    ])
-    # print(A, f)
+    A = root_p_µ * A
+    b = [0, 0, 0, 0, 0, np.sqrt(mu/p**3)*w**2]
 
     return A @ f_perturbation + b
 
