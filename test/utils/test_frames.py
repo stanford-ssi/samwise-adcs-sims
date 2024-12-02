@@ -75,7 +75,7 @@ def test_display_differences_in_conversion_methods():
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_table, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only with table for nutation/precession]")
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_rotation_only, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only]")
 
-def test_ecef_pn_matrix():
+def test_ecef_pn_table():
     jd = dt_utc_to_jd(datetime(2021, 1, 1))
     t_end_seconds = 20 * 24 * 3600
     pn_table = frame_transforms.generate_ecef_pn_table(jd, t_end_seconds)

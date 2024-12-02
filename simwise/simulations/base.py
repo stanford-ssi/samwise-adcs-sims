@@ -19,6 +19,9 @@ def init_state(params):
     ])
     state.orbit_mee = coe_to_mee(state.orbit_keplerian)
 
+    # Initial time conditions
+    state.jd = params.epoch_jd
+
     # Initial attitude conditions
     state.q = params.q_initial
     state.w = params.w_initial
@@ -56,6 +59,9 @@ def run_one(params):
         # Propagate orbit for greater time step - orbit
         if i % int(params.dt_orbit / params.dt_attitude) == 0:
             state.propagate_orbit(params)
+
+            # Update other state representations
+            state.update_other_state_representations(params)
         
         # Calculate perturbation forces
         state.update_environment(params)
@@ -92,8 +98,6 @@ def run_attitude(params):
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
 
     for _ in range(num_points_attitude):
-        # t = params.t_start + i * params.dt_orbit
-        # state.t = t
         state.propagate_time(params, params.dt_attitude)
         times.append(state.t)
         state.compute_control_torque(params)

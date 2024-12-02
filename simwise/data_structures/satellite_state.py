@@ -15,8 +15,11 @@ from simwise.dynamics.orbital import *
 from simwise.dynamics.attitude import *
 from simwise.data_structures.parameters import Parameters
 from simwise.math.coordinate_transforms import *
+from simwise.math.frame_transforms import *
 import simwise.constants
 from simwise.forces.drag import dragPertubationTorque
+from simwise.world_model.magnetic_field import magnetic_field
+
 
 
 class SatelliteState:
@@ -38,6 +41,10 @@ class SatelliteState:
     # Orbital elements in multiple forms
     orbit_keplerian: np.ndarray  # [a, e, i, Ω, ω, θ] in [m, rad]
     orbit_mee: np.ndarray  # [p, f, g, h, k, L]
+    r_eci: np.ndarray  # [x, y, z] in [m]
+    v_eci: np.ndarray  # [vx, vy, vz] in [m/s]
+    r_ecef: np.ndarray  # [x, y, z] in [m]
+    lla_wgs84: np.ndarray  # [lat, lon, alt] in [rad, rad, m]
 
     #  Magnetorquer data
     B: np.ndarray   # [T]
@@ -47,6 +54,8 @@ class SatelliteState:
     # Velocity Components of Satellite on Orbit
     v_vec_trn: np.ndarray # [m/s]   shape(,n)   - V vector magnitude in TRN
     # Radial Components of Satellite Position on Orbit
+
+    # TODO: replace this with r_eci
     r_vec: np.ndarray     # [m]  shape(3,n)     - R position vector - {x,y,z}
     # Satellite altitude (wrt non-J2 Earth)
     h: np.ndarray         # [m]
@@ -60,8 +69,8 @@ class SatelliteState:
 
     def propagate_time(self, params: Parameters, dt):
         """Update this state's time"""
-        # Use this only for attitude
         self.t = self.t + dt
+        self.jd = self.jd + dt / constants.SECONDS_PER_DAY
 
     ###———————————————————————————————————————————————————————————————————————###
     ###                      BEGIN Flight Computer Model                      ###
@@ -148,13 +157,22 @@ class SatelliteState:
         self.v_vec_trn = get_velocity(coe_to_rv(mee_to_coe(self.orbit_mee)))
         self.h = get_altitude(coe_to_rv(mee_to_coe(self.orbit_mee)))
 
+    def update_other_state_representations(self, params: Parameters):
+        rv_eci = coe_to_rv(self.orbit_keplerian)
+        self.r_eci = rv_eci[:3]
+        self.v_eci = rv_eci[3:]
+        self.r_ecef = ECI_to_ECEF_tabular(self.r_eci, params.ecef_pn_table, self.jd)
+        self.lla_wgs84 = ECEF_to_topocentric(self.r_ecef)
+
+        # XXX This is a hack to get the magnetic field only when we propagate orbit
+        self.magnetic_field = magnetic_field(self.lla_wgs84, self.jd)
+
     def update_environment(self, params):
         ''' Solve directly for pertubation torques in one call'''
         
         # Solve for the Drag:
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
         
-        self.magnetic_field = np.zeros(3)
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###
     ###———————————————————————————————————————————————————————————————————————###

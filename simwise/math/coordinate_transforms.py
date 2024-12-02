@@ -1,34 +1,30 @@
 import numpy as np
 from simwise import constants
 
-def ECEF_to_topocentric(position):
+def ECEF_to_topocentric(r, ε = 1e-11):
     """Convert state vector to latitude, longitude, and altitude.
 
     Args:
         rv (_type_): _description_
     """
     # WGS84 constants
-    a = 6378137.0  # Semi-major axis (meters)
-    f = 1 / 298.257223563  # Flattening
-    b = a * (1 - f)  # Semi-minor axis
-    e = np.sqrt(1 - b**2 / a**2)  # Eccentricity
+    e_elipsiod = 0.08182
+    r_e = 6378137.0 # Semi-major axis (meters)
+    # calculate longitude
+    λ = np.arctan2(r[1], r[0])
+    # calculate initial guess of latitude based on circular earth
+    ϕ_prev = np.arctan2(r[2], np.linalg.norm([r[0], r[1]]))
+    N = r_e/(1 - (e_elipsiod**2 * np.sin(ϕ_prev)**2))**0.5
+    ϕ = np.arctan2((r[2] + N * e_elipsiod**2 * np.sin(ϕ_prev)), np.linalg.norm([r[0], r[1]]))
+    while (abs(ϕ_prev - ϕ) > ε):
+        ϕ_prev = ϕ
+        N = r_e/(1 - (e_elipsiod**2 * np.sin(ϕ_prev)**2))**0.5
+        ϕ = np.arctan2((r[2] + N * e_elipsiod**2 * np.sin(ϕ_prev)), np.linalg.norm([r[0], r[1]]))
+    
+    # use converged on ϕ to find height
+    h = ((np.linalg.norm([r[0], r[1]])/np.cos(ϕ))-N)
+    return (np.rad2deg(ϕ),np.rad2deg(λ),h)
 
-    # Extract position components
-    x, y, z = position
-
-    # Longitude
-    longitude = np.arctan2(y, x)
-
-    # Calculate latitude
-    p = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(z * a, p * b)
-    latitude = np.arctan2(z + e**2 * b * np.sin(theta)**3, p - a * e**2 * np.cos(theta)**3)
-
-    # Calculate altitude
-    N = a / np.sqrt(1 - e**2 * np.sin(latitude)**2)
-    altitude = p / np.cos(latitude) - N
-
-    return np.degrees(latitude), np.degrees(longitude), altitude
 
 def coe_to_rv(coe, mu = constants.MU_EARTH):
     """

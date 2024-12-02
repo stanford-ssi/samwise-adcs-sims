@@ -51,7 +51,7 @@ def get_ecef_pn_matrix(year_pn_table, jd):
     return year_pn_table[jd]
 
 
-def eci_to_ecef_tabular(eci_point: NDArray[np.float64], jd: float) -> NDArray[np.float64]:
+def ECI_to_ECEF_tabular(eci_point: NDArray[np.float64], year_pn_table, jd: float) -> NDArray[np.float64]:
     """Convert ECI point to ECEF point using tabular values.
 
     Args:
@@ -62,10 +62,13 @@ def eci_to_ecef_tabular(eci_point: NDArray[np.float64], jd: float) -> NDArray[np
         ecef_point (NDArray[np.float64]): (3,) 1-d vector describing ECEF point [X, Y, Z]
     """
     # Get the rotation matrix
-    rotation_eci_to_ecef = rotation_matrix(jd)
+    rot_matrix = rotation_matrix(jd)
+
+    # Get the pn matrix from the table
+    pn_matrix = get_ecef_pn_matrix(year_pn_table, jd)
 
     # Rotate the position
-    ecef_point = rotation_eci_to_ecef @ eci_point
+    ecef_point = (pn_matrix @ rot_matrix).T @ eci_point
 
     return ecef_point
 

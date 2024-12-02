@@ -2,6 +2,7 @@ import numpy as np
 from simwise.math.quaternion import quaternion_multiply, euler_to_quaternion
 from simwise.utils.time import dt_utc_to_jd
 from simwise.math.frame_transforms import generate_ecef_pn_table
+from simwise import constants
 import datetime
 import numpy as np
 
@@ -71,11 +72,11 @@ class Parameters:
         self.num_dispersions = 20
 
         # Time parameters
-        self.dt_orbit = 1
+        self.dt_orbit = 60
         self.dt_attitude = 0.1
         self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
         self.t_start = 0
-        self.t_end = 60
+        self.t_end = 90 * 3600
 
         # Inertia and controls
         self.inertia = ArrayParameter(
@@ -92,9 +93,9 @@ class Parameters:
         self.allocation_mode = "MagicActuators"
 
         # Initial orbit properties
-        self.a = ScalarParameter(7000e3)
-        self.e = ScalarParameter(0.001)
-        self.i = ScalarParameter(0.1)
+        self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)
+        self.e = ScalarParameter(0.005)
+        self.i = ScalarParameter(np.deg2rad(97.5))
         self.Ω = ScalarParameter(0.1)
         self.ω = ScalarParameter(0.1)
         self.θ = ScalarParameter(0.1)
