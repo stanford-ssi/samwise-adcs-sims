@@ -1,7 +1,7 @@
 import numpy as np
-from simwise.math.quaternion import quaternion_multiply, euler2quaternion
+from simwise.math.quaternion import quaternion_multiply, euler_to_quaternion
 from simwise.utils.time import dt_utc_to_jd
-from simwise.math.frames import generate_ecef_pn_table
+from simwise.math.frame_transforms import generate_ecef_pn_table
 import datetime
 import numpy as np
 
@@ -145,7 +145,7 @@ class Parameters:
                     if isinstance(param, QuaternionParameter):
                         # Generate random Euler angles for quaternion dispersion
                         e_angles = np.random.normal(0, np.sqrt(param.variance), size=3)
-                        random_quaternion = euler2quaternion(e_angles)
+                        random_quaternion = euler_to_quaternion(e_angles)
                         dispersed_value = quaternion_multiply(param, random_quaternion)
                         dispersed_params[attr] = QuaternionParameter(
                             dispersed_value, mean=param.mean, variance=param.variance

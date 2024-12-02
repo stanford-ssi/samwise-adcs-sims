@@ -1,5 +1,5 @@
-from simwise.math.quaternion import *
 import numpy as np
+from simwise.math.quaternion import normalize_quaternion
 
 def attitude_dynamics(x, dt, inertia, tau, noise=0):
     """Apply quaternion dynamics and euler's equations to state vector x.
@@ -33,30 +33,3 @@ def attitude_dynamics(x, dt, inertia, tau, noise=0):
         (inertia[0] - inertia[1])/inertia[2] * Ω[0] * Ω[1] + tau[2] / inertia[2]
     ])
     return np.concatenate((Q_dot, Ω_dot))
-
-
-def compute_control_torque(x, x_desired, K_p=1, K_d=1, tau_max=None):
-    """
-    Compute torque from current to target state using P-D control.
-    Can also specify a maximum actuator torque, `tau_max`, to limit
-    the norm of the appliec torque
-    """
-    # x = [q, w]
-    # x_d = [q_d, w_d]
-    
-    q = normalize_quaternion(x[:4])
-    q_d = normalize_quaternion(x_desired[:4])
-    theta, rotation_vector = angle_axis_between(q, q_d)
-    
-    w = x[4:]
-    w_d = x_desired[4:]
-    w_error = w_d - w
-
-    tau = K_p * theta * rotation_vector + K_d * w_error
-
-    if tau_max is not None:
-        if np.linalg.norm(tau) > tau_max:
-            tau = tau_max * tau / np.linalg.norm(tau) 
-
-    return tau
-

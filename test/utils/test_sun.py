@@ -4,8 +4,8 @@ import asyncio
 import numpy as np
 import os
 from datetime import datetime, timedelta
-from simwise.attitude_determination.sun import approx_sun_position
-from simwise.math.axis_angle import get_axis_angle
+from simwise.navigation.sun import approx_sun_position
+from simwise.math.axis_angle import vectors_to_axis_angle
 from simwise.utils.horizons import get_position_from_horizons, CACHE_FILE
 from simwise.utils.plots import plot_subplots
 
@@ -40,7 +40,7 @@ def test_approx_sun_position():
     # plot error
     errors = []
     for i in range(times.shape[0]):
-        axis, angle = get_axis_angle(sun_positions_normalized[i], r_sun_approx[i])
+        axis, angle = vectors_to_axis_angle(sun_positions_normalized[i], r_sun_approx[i])
         
         errors.append(np.rad2deg(angle))
 

@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
 from simwise.data_structures.satellite_state import SatelliteState
-from simwise.orbit.equinoctial import coe2mee
+from simwise.math.coordinate_transforms import coe_to_mee
 
 def init_state(params):
     state = SatelliteState()
@@ -17,7 +17,7 @@ def init_state(params):
         params.a, params.e, params.i,
         params.Ω, params.ω, params.θ
     ])
-    state.orbit_mee = coe2mee(state.orbit_keplerian)
+    state.orbit_mee = coe_to_mee(state.orbit_keplerian)
 
     # Initial attitude conditions
     state.q = params.q_initial
@@ -40,6 +40,7 @@ def run_one(params):
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
 
     for i in range(num_points_attitude):
+        
         # Define time in terms of smaller timestep - attitude
         state.propagate_time(params, params.dt_attitude)
         
@@ -57,7 +58,7 @@ def run_one(params):
             state.propagate_orbit(params)
         
         # Calculate perturbation forces
-        state.calculate_pertubation_forces(params)
+        state.update_environment(params)
         
         states.append(copy.deepcopy(state))
         times.append(state.t)

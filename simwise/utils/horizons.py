@@ -7,7 +7,7 @@ import os
 import re
 from datetime import datetime, timedelta
 
-from simwise.math.frames import ecliptic_to_equatorial
+from simwise.math.frame_transforms import ecliptic_to_equatorial
 from simwise.utils.time import dt_utc_to_jd
 from simwise import constants
 

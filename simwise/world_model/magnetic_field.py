@@ -2,8 +2,18 @@ import os
 import igrf
 import sys
 from datetime import datetime
+from simwise.data_structures.satellite_state import SatelliteState
 
-def magnetic_field(lat, lon, alt):
+# First ensure IGRF is built
+try:
+    igrf.build()
+except AttributeError as e:
+    igrf.base.build()
+except Exception as e:
+    print(f"Error building IGRF: {str(e)}")
+    raise e
+
+def magnetic_field(params, state):
     """
     Calculate magnetic field components using IGRF-13 model.
     
@@ -21,14 +31,7 @@ def magnetic_field(lat, lon, alt):
     xarray.Dataset
         Dataset containing magnetic field components
     """
-    # First ensure IGRF is built
-    try:
-        igrf.build()
-    except AttributeError as e:
-        igrf.base.build()
-    except Exception as e:
-        print(f"Error building IGRF: {str(e)}")
-        return None
+    r_topo = state.orbit_keplerian
 
     try:
         # Get current date in the format IGRF expects

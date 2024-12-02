@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 import erfa
 import numpy as np
 
-from simwise.math import frames
+from simwise.math import frame_transforms
 from simwise.utils.time import dt_utc_to_jd
 from simwise.utils.plots import plot_subplots
 
@@ -52,11 +52,11 @@ def test_display_differences_in_conversion_methods():
             dt = datetime(2000 + year, 1, 1) + timedelta(days=day)
             ecef_vector_IAU = ecef_to_eci_IAU(reference_vector, dt)
             jd_geneci = dt_utc_to_jd(dt)
-            ecef_vector_geneci = frames.eci_to_ecef(reference_vector, dt)
+            ecef_vector_geneci = frame_transforms.eci_to_ecef(reference_vector, dt)
             diff_geneci.append(ecef_vector_IAU - ecef_vector_geneci)
-            rot_mat = frames.rotation_matrix(jd_geneci)
+            rot_mat = frame_transforms.rotation_matrix(jd_geneci)
             if day == 0:
-                pn_matrix = frames.precession_nutation_matrix(jd_geneci)
+                pn_matrix = frame_transforms.precession_nutation_matrix(jd_geneci)
                 # print(pn_matrix)
                 year_pn_table.append(pn_matrix)
             diff_geneci_table.append(
@@ -78,6 +78,6 @@ def test_display_differences_in_conversion_methods():
 def test_ecef_pn_matrix():
     jd = dt_utc_to_jd(datetime(2021, 1, 1))
     t_end_seconds = 20 * 24 * 3600
-    pn_table = frames.generate_ecef_pn_table(jd, t_end_seconds)
+    pn_table = frame_transforms.generate_ecef_pn_table(jd, t_end_seconds)
     assert len(pn_table) == 3
     

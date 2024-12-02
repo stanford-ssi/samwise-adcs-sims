@@ -11,6 +11,19 @@ DERIVATIVE_MATRIX = np.array([
     [0.0, 0.0, 0.0]
 ])
 
+def ecliptic_to_equatorial():
+    """
+    Rotate the position vector from the ecliptic plane to the Earth's equatorial plane.
+    """
+    epsilon = np.radians(23.43928)  # Mean obliquity of the ecliptic at J2000
+    rotation_matrix = np.array([
+        [1, 0, 0],
+        [0, np.cos(epsilon), -np.sin(epsilon)],
+        [0, np.sin(epsilon), np.cos(epsilon)]
+    ])
+    return rotation_matrix
+
+
 def generate_ecef_pn_table(epoch_jd, t_end_seconds):
     """
     Generate the table for the nutation and precession matrices based on simulation
@@ -29,12 +42,14 @@ def generate_ecef_pn_table(epoch_jd, t_end_seconds):
         year_pn_table[jd_waypoint] = pn_matrix
     return year_pn_table
 
+
 def get_ecef_pn_matrix(year_pn_table, jd):
     """
     Get the precession/nutation matrix for a given Julian date.
     """
     jd = jd // 10 * 10
     return year_pn_table[jd]
+
 
 def eci_to_ecef_tabular(eci_point: NDArray[np.float64], jd: float) -> NDArray[np.float64]:
     """Convert ECI point to ECEF point using tabular values.
@@ -200,6 +215,7 @@ def rotation_matrix(
 
     return earth_matrix
 
+
 def precession_nutation_matrix(
     julian_day: float
 ) -> NDArray[np.float64]:
@@ -217,6 +233,7 @@ def precession_nutation_matrix(
 
     # Return the rotation
     return pn_matrix
+
 
 ## The monstrosity that is the nutation / precession
 def compute_celestial_positions(
@@ -303,56 +320,3 @@ moon_elongation = np.polynomial.polynomial.Polynomial(
 moon_ascension = np.polynomial.polynomial.Polynomial(
     [450160.398036, -6962890.5431, 7.4722]
 )
-
-def ECEF_to_topocentric(position):
-    """Convert state vector to latitude, longitude, and altitude.
-
-    Args:
-        rv (_type_): _description_
-    """
-    # WGS84 constants
-    a = 6378137.0  # Semi-major axis (meters)
-    f = 1 / 298.257223563  # Flattening
-    b = a * (1 - f)  # Semi-minor axis
-    e = np.sqrt(1 - b**2 / a**2)  # Eccentricity
-
-    # Extract position components
-    x, y, z = position
-
-    # Longitude
-    longitude = np.arctan2(y, x)
-
-    # Calculate latitude
-    p = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(z * a, p * b)
-    latitude = np.arctan2(z + e**2 * b * np.sin(theta)**3, p - a * e**2 * np.cos(theta)**3)
-
-    # Calculate altitude
-    N = a / np.sqrt(1 - e**2 * np.sin(latitude)**2)
-    altitude = p / np.cos(latitude) - N
-
-    return np.degrees(latitude), np.degrees(longitude), altitude
-
-def ECI_to_topocentric(position_eci, JD):
-    """Convert ECI to LLA using WGS84
-
-    Args:
-        position (_type_): _description_
-    """
-    position = eci_to_ecef(position_eci)
-
-    
-
-
-def ecliptic_to_equatorial():
-    """
-    Rotate the position vector from the ecliptic plane to the Earth's equatorial plane.
-    """
-    epsilon = np.radians(23.43928)  # Mean obliquity of the ecliptic at J2000
-    rotation_matrix = np.array([
-        [1, 0, 0],
-        [0, np.cos(epsilon), -np.sin(epsilon)],
-        [0, np.sin(epsilon), np.cos(epsilon)]
-    ])
-    return rotation_matrix
-

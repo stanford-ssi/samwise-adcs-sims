@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_axis_angle(v1, v2):
+def vectors_to_axis_angle(v1, v2):
     """
     Calculates the axis and angle of rotation between two vectors.
     """

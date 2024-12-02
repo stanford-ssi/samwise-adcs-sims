@@ -11,6 +11,7 @@ def normalize_quaternion(q):
     #  if q_normalized[0] < 0: q_normalized *= -1
     return q_normalized
 
+
 def quaternion_multiply(q1, q2):
     """
     Multiply two quaternions.
@@ -50,7 +51,7 @@ def quaternion_inverse(q):
     return np.array([q[0], -q[1], -q[2], -q[3]])
 
 
-def quaternion2euler(q, sequence="zyx"):
+def quaternion_to_euler(q, sequence="zyx"):
     """Transform a quaternion to euler angles.
 
     NOTE: only supports zyx sequence.
@@ -71,7 +72,8 @@ def quaternion2euler(q, sequence="zyx"):
     else:
         raise ValueError("Invalid sequence")
 
-def euler2quaternion(euler_angles, sequence="zyx"):
+
+def euler_to_quaternion(euler_angles, sequence="zyx"):
     """Transform euler angles to a quaternion.
 
     NOTE: only supports zyx sequence.
@@ -93,7 +95,7 @@ def euler2quaternion(euler_angles, sequence="zyx"):
         raise ValueError("Invalid sequence")
 
 
-def angle_axis_between(q1, q2):
+def quaternions_to_axis_angle(q1, q2):
     """
     Calculate the angle-axis representation of the rotation from quaternion q1 to quaternion q2.
 
@@ -128,6 +130,7 @@ def angle_axis_between(q1, q2):
     #     rotation_vector = np.array([1, 0, 0])
 
     return theta, rotation_vector
+
 
 def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
     """
