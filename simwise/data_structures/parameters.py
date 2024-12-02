@@ -72,11 +72,11 @@ class Parameters:
         self.num_dispersions = 20
 
         # Time parameters
-        self.dt_orbit = 60
+        self.dt_orbit = 120
         self.dt_attitude = 0.1
         self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
         self.t_start = 0
-        self.t_end = 90 * 3600
+        self.t_end = 90 * 60
 
         # Inertia and controls
         self.inertia = ArrayParameter(

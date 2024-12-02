@@ -116,8 +116,16 @@ class SatelliteState:
         """Update this state to represent advancing attitude"""
         x_attitude = np.hstack((self.q, self.w))
 
+        # Precompute terms
+        inertia_inv = 1.0 / params.inertia
+        inertia_diff = np.array([
+            (params.inertia[1] - params.inertia[2]) / params.inertia[0],
+            (params.inertia[2] - params.inertia[0]) / params.inertia[1],
+            (params.inertia[0] - params.inertia[1]) / params.inertia[2]
+        ])
+
         def attitude_ode(t, x):
-            return attitude_dynamics(x_attitude, params.dt_attitude, params.inertia, self.control_torque)
+            return attitude_dynamics(x_attitude, params.dt_attitude, inertia_inv, inertia_diff, self.control_torque)
 
         sol = solve_ivp(
             attitude_ode,
@@ -172,6 +180,8 @@ class SatelliteState:
         
         # Solve for the Drag:
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
+
+        
         
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###

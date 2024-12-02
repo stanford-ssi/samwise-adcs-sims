@@ -1,5 +1,7 @@
 import numpy as np
+from numba import jit
 
+@jit(nopython=True)
 def normalize_quaternion(q):
     """Normalize a quaternion and force scalar positive.
 
