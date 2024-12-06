@@ -55,6 +55,7 @@ def dragPertubationTorque(params, e_angles, velocity, altitude):
     projected_area = calculate_projected_area(projected_vertices)
     
     # Calculate drag force magnitude
+    # TODO: calculate relative velocity (based on earth rotation)
     v_mag = np.linalg.norm(velocity)
     drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * drag_coefficient()
     

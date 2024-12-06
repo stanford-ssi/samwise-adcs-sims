@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
-from simwise.data_structures.satellite_state import SatelliteState
+from simwise.data_structures.satellite_state import SatelliteState, interpolate_state
 from simwise.math.coordinate_transforms import coe_to_mee
 
 def init_state(params):
@@ -41,12 +41,28 @@ def run_one(params):
     times = []
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
+    state.update_other_state_representations(params)
+    # print(state.orbit_keplerian)
+    # print(state.orbit_mee)
+    infrequent_state_next = copy.deepcopy(state)
 
     for i in range(num_points_attitude):
         
-        # Define time in terms of smaller timestep - attitude
-        state.propagate_time(params, params.dt_attitude)
-        
+        # Propagate orbit for greater time step - orbit
+        if i % int(params.dt_orbit / params.dt_attitude) == 0:
+            # Save the current state for linear interpolation in the future
+            infrequent_state_prev = copy.deepcopy(infrequent_state_next)
+
+            # Just has a different position in the orbit
+            infrequent_state_next.propagate_orbit(params)
+            infrequent_state_next.update_other_state_representations(params)
+            # print(infrequent_state_next.orbit_keplerian)
+            infrequent_state_next.t += params.dt_orbit
+            
+        else:
+            state.orbit_keplerian = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_keplerian")
+            state.magnetic_field = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="magnetic_field")
+
         # Compute desired control torque
         state.compute_control_torque(params)
 
@@ -56,16 +72,12 @@ def run_one(params):
         # Propagate attitude at every step - smaller timestep
         state.propagate_attitude(params)
         
-        # Propagate orbit for greater time step - orbit
-        if i % int(params.dt_orbit / params.dt_attitude) == 0:
-            state.propagate_orbit(params)
-
-            # Update other state representations
-            state.update_other_state_representations(params)
-        
         # Calculate perturbation forces
         state.update_environment(params)
         
+        # Define time in terms of smaller timestep - attitude
+        state.propagate_time(params, params.dt_attitude)
+
         states.append(copy.deepcopy(state))
         times.append(state.t)
 

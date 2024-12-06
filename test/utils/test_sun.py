@@ -4,7 +4,7 @@ import asyncio
 import numpy as np
 import os
 from datetime import datetime, timedelta
-from simwise.navigation.sun import approx_sun_position
+from simwise.world_model.sun import approx_sun_position
 from simwise.math.axis_angle import vectors_to_axis_angle
 from simwise.utils.horizons import get_position_from_horizons, CACHE_FILE
 from simwise.utils.plots import plot_subplots

@@ -19,7 +19,7 @@ from simwise.math.frame_transforms import *
 import simwise.constants
 from simwise.forces.drag import dragPertubationTorque
 from simwise.world_model.magnetic_field import magnetic_field
-
+from simwise.world_model.sun import approx_sun_position
 
 
 class SatelliteState:
@@ -143,7 +143,7 @@ class SatelliteState:
 
     def propagate_orbit(self, params: Parameters):
         """Update this state to represent advancing orbit"""
-        f_perturbation = np.array([0, 0, 0])
+        f_perturbation = np.zeros(3)
 
         def orbit_ode(t, mee):
             return mee_dynamics(mee, simwise.constants.MU_EARTH, params.dt_orbit, f_perturbation)
@@ -158,15 +158,21 @@ class SatelliteState:
         # Solve for the MEE and Keplerian Orbital States
         self.orbit_mee = sol.y[:, -1]
         self.orbit_mee[5] = self.orbit_mee[5] % (2 * np.pi)
+
+    # TODO update these functions so they are called along with propagate orbit once
+    # Seperate out the drag torque computation, and also use an interpolated value for
+    # atmospheric density (from the two orbital states)
+    def update_other_state_representations(self, params: Parameters):
+        # Solve for Keplerian Orbital Elements
         self.orbit_keplerian = mee_to_coe(self.orbit_mee)
         self.orbit_keplerian[5] = self.orbit_keplerian[5] % (2 * np.pi)
         
         # Solve for Velocity, Position and Altitude at this Orbital Time Step
-        self.v_vec_trn = get_velocity(coe_to_rv(mee_to_coe(self.orbit_mee)))
-        self.h = get_altitude(coe_to_rv(mee_to_coe(self.orbit_mee)))
-
-    def update_other_state_representations(self, params: Parameters):
         rv_eci = coe_to_rv(self.orbit_keplerian)
+
+        self.v_vec_trn = get_velocity(rv_eci)
+        self.h = get_altitude(rv_eci)
+
         self.r_eci = rv_eci[:3]
         self.v_eci = rv_eci[3:]
         self.r_ecef = ECI_to_ECEF_tabular(self.r_eci, params.ecef_pn_table, self.jd)
@@ -180,10 +186,40 @@ class SatelliteState:
         
         # Solve for the Drag:
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
-
-        
+        self.r_sun = approx_sun_position(self.jd)
         
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###
     ###———————————————————————————————————————————————————————————————————————###
         
+
+def interpolate_state(state1, state2, target_time, attribute):
+    """
+    Linearly interpolates a specific attribute between two states.
+
+    Parameters:
+        state1 (State): The first state.
+        state2 (State): The second state.
+        target_time (float): The time at which to interpolate.
+        attribute (str): The attribute to interpolate.
+
+    Returns:
+        np.ndarray: The interpolated value of the specified attribute.
+    """
+    if not hasattr(state1, attribute) or not hasattr(state2, attribute):
+        raise AttributeError(f"Both states must have the attribute '{attribute}'.")
+
+    # Ensure times are in the right order
+    t1, t2 = state1.t, state2.t
+    if t1 == t2:
+        raise ValueError("State times cannot be identical for interpolation.")
+    if not (t1 <= target_time <= t2):
+        raise ValueError("Target time must be between the times of the two states.")
+    
+    # Linear interpolation formula
+    value1 = np.array(getattr(state1, attribute))
+    value2 = np.array(getattr(state2, attribute))
+    alpha = (target_time - t1) / (t2 - t1)
+    interpolated_value = (1 - alpha) * value1 + alpha * value2
+    
+    return interpolated_value

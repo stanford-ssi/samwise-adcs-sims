@@ -131,10 +131,12 @@ def mee_to_coe(elements):
     k = elements[4]
     L = elements[5]
 
+    # convert orbital elements
     a = p / (1 - f**2 - g**2)
     e = np.sqrt(f**2 + g**2)
     i = np.arctan2(2 * np.sqrt(h**2 + k**2), 1 - h**2 - k**2)
+    ω = np.arctan2(g*h-f*k, f*h+g*k)
     Ω = np.arctan2(k, h)
-    ω = np.arctan2(g, f) - L
-    θ = L - Ω - ω
+    θ = L - np.arctan2(g,f)
+    # θ = L - Ω - ω
     return np.array([a, e, i, Ω, ω, θ])

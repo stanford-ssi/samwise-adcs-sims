@@ -177,7 +177,7 @@ def plot_results(states_from_dispersions):
 
     for run_index, states in enumerate(states_from_dispersions, start=1):
         # Generate a random color for this set of states
-        random_color = f"rgb({random.randint(0, 255)}, {random.randint(0, 255)}, {random.randint(0, 255)})"
+        random_color = f"rgb({random.randint(0, 200)}, {random.randint(0, 200)}, {random.randint(0, 200)})"
 
         # Add a dummy trace to the legend for this run
         fig.add_trace(
@@ -202,9 +202,17 @@ def plot_results(states_from_dispersions):
             ("ω (deg)", lambda s: np.degrees(s.orbit_keplerian[4])),
             ("θ (deg)", lambda s: np.degrees(s.orbit_keplerian[5]))
         ]
+        orbit_buffer_list = [0.1, 0.00001, 0.0001, 0.0001, 0.0001, 0.0001]
 
         for i, (name, func) in enumerate(orbit_params):
             values = [func(state) for state in states]
+
+            # Calculate y-axis range
+            y_min = min(values)
+            y_max = max(values)
+            buffer = orbit_buffer_list[i % len(orbit_buffer_list)] if orbit_buffer_list else 0
+            y_range = [y_min - buffer, y_max + buffer]
+
             fig.add_trace(
                 go.Scatter(
                     x=times, y=values, name=name,
@@ -214,7 +222,7 @@ def plot_results(states_from_dispersions):
                 ),
                 row=i+1, col=1
             )
-            fig.update_yaxes(title_text=name, row=i+1, col=1)
+            fig.update_yaxes(title_text=name, row=i+1, col=1, range=y_range)
 
         # Attitude parameters
         attitude_params = [
