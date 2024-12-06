@@ -18,8 +18,10 @@ from simwise.math.coordinate_transforms import *
 from simwise.math.frame_transforms import *
 import simwise.constants
 from simwise.forces.drag import dragPertubationTorque
+from simwise.world_model.atmosphere import compute_density
 from simwise.world_model.magnetic_field import magnetic_field
 from simwise.world_model.sun import approx_sun_position
+from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
 
 
 class SatelliteState:
@@ -75,6 +77,15 @@ class SatelliteState:
     ###———————————————————————————————————————————————————————————————————————###
     ###                      BEGIN Flight Computer Model                      ###
     ###———————————————————————————————————————————————————————————————————————###
+    def compute_target_attitude(self, params: Parameters):
+        """Compute the desired attitude for the current state"""
+
+        # TODO implement enums here and for control mode
+        if params.pointing_mode == "SunPointingNadirConstrained":
+            self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
+        else:
+            raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
+
     def compute_control_torque(self, params: Parameters):
         """Compute the desired control torque for the current state\
             
@@ -82,7 +93,9 @@ class SatelliteState:
         x_attitude = np.hstack((self.q, self.w))
         x_attitude_desired = np.hstack((self.q_d, self.w_d))
 
-        self.error_angle = quaternions_to_axis_angle(self.q, self.q_d)[0]
+        error_angle, error_vector = quaternions_to_axis_angle(self.q, self.q_d)
+        self.error_angle = error_angle
+        self.error_vector = error_vector
         if self.control_mode == "PD":
             self.desired_control_torque = compute_control_torque(x_attitude,
                                                      x_attitude_desired,
@@ -102,6 +115,7 @@ class SatelliteState:
         #TODO: Implement a control allocation algorithm
         if self.allocation_mode == "MagicActuators":
             self.control_torque = self.desired_control_torque
+            self.control_torque += np.random.normal(0, params.noise_torque, 3)
         else:
             raise ValueError(f"Unknown control allocation mode '{self.allocation_mode}'")
         
@@ -162,13 +176,14 @@ class SatelliteState:
     # TODO update these functions so they are called along with propagate orbit once
     # Seperate out the drag torque computation, and also use an interpolated value for
     # atmospheric density (from the two orbital states)
-    def update_other_state_representations(self, params: Parameters):
+    def update_other_orbital_state_representations(self, params: Parameters):
+
         # Solve for Keplerian Orbital Elements
         self.orbit_keplerian = mee_to_coe(self.orbit_mee)
         self.orbit_keplerian[5] = self.orbit_keplerian[5] % (2 * np.pi)
         
         # Solve for Velocity, Position and Altitude at this Orbital Time Step
-        rv_eci = coe_to_rv(self.orbit_keplerian)
+        rv_eci = mee_to_rv(self.orbit_mee, constants.MU_EARTH)
 
         self.v_vec_trn = get_velocity(rv_eci)
         self.h = get_altitude(rv_eci)
@@ -178,15 +193,16 @@ class SatelliteState:
         self.r_ecef = ECI_to_ECEF_tabular(self.r_eci, params.ecef_pn_table, self.jd)
         self.lla_wgs84 = ECEF_to_topocentric(self.r_ecef)
 
-        # XXX This is a hack to get the magnetic field only when we propagate orbit
-        self.magnetic_field = magnetic_field(self.lla_wgs84, self.jd)
-
     def update_environment(self, params):
         ''' Solve directly for pertubation torques in one call'''
         
-        # Solve for the Drag:
-        self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.h)
-        self.r_sun = approx_sun_position(self.jd)
+        self.magnetic_field = magnetic_field(self.lla_wgs84, self.jd)
+        self.atmospheric_density = compute_density(self.h, self.lla_wgs84[0], self.jd)
+        self.r_sun_eci = approx_sun_position(self.jd)
+
+    #TODO this is messy, clean up
+    def update_forces(self, params):
+        self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
         
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###

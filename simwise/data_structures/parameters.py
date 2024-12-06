@@ -87,10 +87,14 @@ class Parameters:
         self.max_torque = ScalarParameter(0.0032)
         self.noise_torque = ScalarParameter(0.00000288)
         self.mu_max = ScalarParameter(0.03)
+        self.motor_noise = 0.02 # 2% speed error
 
         # Control mode and allocation mode —— These are not dispersed
         self.control_mode = "PD"
         self.allocation_mode = "MagicActuators"
+
+        # Attitude target
+        self.pointing_mode = "SunPointingNadirConstrained"
 
         # Initial orbit properties
         self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)

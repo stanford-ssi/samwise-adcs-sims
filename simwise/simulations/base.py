@@ -41,9 +41,11 @@ def run_one(params):
     times = []
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
-    state.update_other_state_representations(params)
-    # print(state.orbit_keplerian)
-    # print(state.orbit_mee)
+    
+    # Initialize the state of the orbit
+    # TODO make an initialization function
+    state.update_other_orbital_state_representations(params)
+    state.update_environment(params)
     infrequent_state_next = copy.deepcopy(state)
 
     for i in range(num_points_attitude):
@@ -52,29 +54,46 @@ def run_one(params):
         if i % int(params.dt_orbit / params.dt_attitude) == 0:
             # Save the current state for linear interpolation in the future
             infrequent_state_prev = copy.deepcopy(infrequent_state_next)
+            # TODO organize this
+            state.orbit_mee = infrequent_state_prev.orbit_mee
+            state.orbit_keplerian = infrequent_state_prev.orbit_keplerian
+            state.magnetic_field = infrequent_state_prev.magnetic_field
+            state.atmospheric_density = infrequent_state_prev.atmospheric_density
+            state.r_sun_eci = infrequent_state_prev.r_sun_eci
 
-            # Just has a different position in the orbit
+            # Propagate orbit for greater time step - orbit
             infrequent_state_next.propagate_orbit(params)
-            infrequent_state_next.update_other_state_representations(params)
-            # print(infrequent_state_next.orbit_keplerian)
-            infrequent_state_next.t += params.dt_orbit
-            
-        else:
+            infrequent_state_next.update_other_orbital_state_representations(params)
+            infrequent_state_next.update_environment(params)
+            infrequent_state_next.propagate_time(params, params.dt_orbit)
+
+        else: 
+            # Interpolate things that take a long time to compute
+            state.orbit_mee = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_mee")
             state.orbit_keplerian = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_keplerian")
+            state.orbit_keplerian[5] = state.orbit_keplerian[5] % (2 * np.pi)
             state.magnetic_field = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="magnetic_field")
+            state.atmospheric_density = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="atmospheric_density")
+            state.r_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="r_sun_eci")   
+    
+        # Update other state representations
+        state.update_other_orbital_state_representations(params)
+
+        # Compute the target attitude
+        state.compute_target_attitude(params)
 
         # Compute desired control torque
         state.compute_control_torque(params)
 
-        # Allocate torque to actuators
+        # Allocate torque to actuators, and apply actuator noise model
         state.allocate_control_torque(params)
 
         # Propagate attitude at every step - smaller timestep
         state.propagate_attitude(params)
         
-        # Calculate perturbation forces
-        state.update_environment(params)
-        
+        # Update forces
+        state.update_forces(params)
+
         # Define time in terms of smaller timestep - attitude
         state.propagate_time(params, params.dt_attitude)
 

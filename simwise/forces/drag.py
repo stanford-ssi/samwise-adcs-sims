@@ -1,13 +1,11 @@
 import numpy as np 
 from simwise.forces.area_projection import create_rotation_matrix, define_satellite_vertices, project_prism, calculate_projected_area
 from simwise.constants import *
-from simwise.data_structures.parameters import Parameters
-from simwise.world_model.atmosphere_data import *
-import unittest
+from simwise.world_model.atmosphere import *
 
 # DRAG CALCULATION:
 
-def dragPertubationTorque(params, e_angles, velocity, altitude):
+def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
     """
     Calculate the drag perturbation torque on the satellite.
 
@@ -25,22 +23,6 @@ def dragPertubationTorque(params, e_angles, velocity, altitude):
                 2. Medium Solar Activity
                 3. High Solar Activity
     """
-    
-    # Convert altitude to nearest multiple of 20 km
-    altitude_km = round(altitude / 1000 / 20) * 20
-
-    # Get the min and max altitudes from the data
-    min_altitude = min(low_solar_activity.keys())
-    max_altitude = max(low_solar_activity.keys())
-
-    # Clamp the altitude to the valid range
-    altitude_km = max(min_altitude, min(max_altitude, altitude_km))
-
-    atmospheric_density = np.array([
-        low_solar_activity[altitude_km]['density'],
-        moderate_solar_activity[altitude_km]['density'],
-        high_solar_activity[altitude_km]['density']
-    ])
     
     # Calculate rotation matrix
     R = create_rotation_matrix(e_angles[0], e_angles[1], e_angles[2])

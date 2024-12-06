@@ -26,6 +26,29 @@ def ECEF_to_topocentric(r, ε = 1e-11):
     return (np.rad2deg(ϕ),np.rad2deg(λ),h)
 
 
+def mee_to_rv(mee, µ):
+    p = mee[0]
+    f = mee[1]
+    g = mee[2]
+    h = mee[3]
+    k = mee[4]
+    L = mee[5]
+
+    # calculate important values
+    α_2 = h**2 - k**2
+    s_2 = 1 + h**2 + k**2
+    w = 1 + f*np.cos(L) + g*np.sin(L)
+    r = p/w
+    # convert orbital elements
+    r_x = (r/s_2)*(np.cos(L)+α_2*np.cos(L)+2*h*k*np.sin(L))
+    r_y = (r/s_2)*(np.sin(L)-α_2*np.sin(L)+2*h*k*np.cos(L))
+    r_z = (2*r/s_2)*(h*np.sin(L)-k*np.cos(L))
+    v_x = (-1/s_2)*np.sqrt(µ/p)*(np.sin(L)+α_2*np.sin(L)-2*h*k*np.cos(L)+g-2*f*h*k+α_2*g)
+    v_y = (-1/s_2)*np.sqrt(µ/p)*(-np.cos(L)+α_2*np.cos(L)+2*h*k*np.sin(L)-f+2*g*h*k+α_2*f)
+    v_z = (2/s_2)*np.sqrt(µ/p)*(h*np.cos(L)+k*np.sin(L)+f*h+g*k)
+    return([r_x, r_y, r_z, v_x, v_y, v_z])
+
+
 def coe_to_rv(coe, mu = constants.MU_EARTH):
     """
     Convert Classical Orbital Elements (COE) to State Vectors (RV)

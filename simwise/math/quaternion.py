@@ -144,3 +144,28 @@ def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
     temp = quaternion_multiply(q, v_quat)
     v_rotated = quaternion_multiply(temp, q_conj)
     return v_rotated[1:]
+
+
+def dcm_to_quaternion(dcm):
+    """
+    Convert a direction cosine matrix to a quaternion.
+
+    Parameters:
+    dcm (np.ndarray): A 3x3 direction cosine matrix.
+
+    Returns:
+    np.ndarray: The quaternion representation of the DCM.
+    """
+    # Extract elements from DCM
+    d11, d12, d13 = dcm[0]
+    d21, d22, d23 = dcm[1]
+    d31, d32, d33 = dcm[2]
+
+    # Compute the quaternion
+    q0 = 0.5 * np.sqrt(1 + d11 + d22 + d33)
+    q1 = (d32 - d23) / (4 * q0)
+    q2 = (d13 - d31) / (4 * q0)
+    q3 = (d21 - d12) / (4 * q0)
+    np.array([q0, q1, q2, q3])
+    q = normalize_quaternion(np.array([q0, q1, q2, q3]))
+    return q

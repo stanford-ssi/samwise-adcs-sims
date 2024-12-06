@@ -37,3 +37,32 @@ def run():
     #     title_text="Magnetic Field Vector vs Time",
     # )
     # fig_mag.show()
+
+    # Plot sun vector
+    fig_mag = plot_states_plotly(
+        states[0],
+        lambda state: state.jd,
+        {
+            "x": lambda state: state.r_sun_eci[0] / np.linalg.norm(state.r_sun_eci),
+            "y": lambda state: state.r_sun_eci[1] / np.linalg.norm(state.r_sun_eci),
+            "z": lambda state: state.r_sun_eci[2] / np.linalg.norm(state.r_sun_eci),
+        },
+        spacing=0.05,
+        title_text="Sun Vector vs Time",
+    )
+    fig_mag.show()
+
+    # Plot nadir vector
+    fig_mag = plot_states_plotly(
+        states[0],
+        lambda state: state.jd,
+        {
+            "x": lambda state: state.r_eci[0] / np.linalg.norm(state.r_eci),
+            "y": lambda state: state.r_eci[1] / np.linalg.norm(state.r_eci),
+            "z": lambda state: state.r_eci[2] / np.linalg.norm(state.r_eci),
+        },
+        spacing=0.05,
+        title_text="Nadir Vector vs Time",
+    )
+    fig_mag.show()
+    
