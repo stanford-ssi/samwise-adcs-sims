@@ -1,5 +1,7 @@
 import numpy as np
+from numba import jit
 
+@jit(nopython=True)
 def normalize_quaternion(q):
     """Normalize a quaternion and force scalar positive.
 
@@ -10,6 +12,7 @@ def normalize_quaternion(q):
     # print(q_normalized, -q_normalized if q_normalized[0] < 0 else q_normalized)
     #  if q_normalized[0] < 0: q_normalized *= -1
     return q_normalized
+
 
 def quaternion_multiply(q1, q2):
     """
@@ -31,7 +34,7 @@ def quaternion_multiply(q1, q2):
     y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
     z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
 
-    return np.array([w, x, y, z])
+    return normalize_quaternion(np.array([w, x, y, z]))
 
 
 def quaternion_inverse(q):
@@ -50,7 +53,7 @@ def quaternion_inverse(q):
     return np.array([q[0], -q[1], -q[2], -q[3]])
 
 
-def quaternion2euler(q, sequence="zyx"):
+def quaternion_to_euler(q, sequence="zyx"):
     """Transform a quaternion to euler angles.
 
     NOTE: only supports zyx sequence.
@@ -72,7 +75,29 @@ def quaternion2euler(q, sequence="zyx"):
         raise ValueError("Invalid sequence")
 
 
-def angle_axis_between(q1, q2):
+def euler_to_quaternion(euler_angles, sequence="zyx"):
+    """Transform euler angles to a quaternion.
+
+    NOTE: only supports zyx sequence.
+
+    Args:
+        euler_angles (np.ndarray): euler angles of form [phi, theta, psi]
+        sequence (str): sequence of euler angles, default is "zyx"
+    """
+    phi = euler_angles[0]
+    theta = euler_angles[1]
+    psi = euler_angles[2]
+    if sequence == "zyx":
+        q1 = np.cos(phi/2)*np.cos(theta/2)*np.cos(psi/2) + np.sin(phi/2)*np.sin(theta/2)*np.sin(psi/2)
+        q2 = np.sin(phi/2)*np.cos(theta/2)*np.cos(psi/2) - np.cos(phi/2)*np.sin(theta/2)*np.sin(psi/2)
+        q3 = np.cos(phi/2)*np.sin(theta/2)*np.cos(psi/2) + np.sin(phi/2)*np.cos(theta/2)*np.sin(psi/2)
+        q4 = np.cos(phi/2)*np.cos(theta/2)*np.sin(psi/2) - np.sin(phi/2)*np.sin(theta/2)*np.cos(psi/2)
+        return np.array([q1, q2, q3, q4])
+    else:
+        raise ValueError("Invalid sequence")
+
+
+def quaternions_to_axis_angle(q1, q2):
     """
     Calculate the angle-axis representation of the rotation from quaternion q1 to quaternion q2.
 
@@ -108,6 +133,7 @@ def angle_axis_between(q1, q2):
 
     return theta, rotation_vector
 
+
 def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
     """
     Rotate a vector from inertial to body frame using quaternion.
@@ -118,3 +144,28 @@ def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
     temp = quaternion_multiply(q, v_quat)
     v_rotated = quaternion_multiply(temp, q_conj)
     return v_rotated[1:]
+
+
+def dcm_to_quaternion(dcm):
+    """
+    Convert a direction cosine matrix to a quaternion.
+
+    Parameters:
+    dcm (np.ndarray): A 3x3 direction cosine matrix.
+
+    Returns:
+    np.ndarray: The quaternion representation of the DCM.
+    """
+    # Extract elements from DCM
+    d11, d12, d13 = dcm[0]
+    d21, d22, d23 = dcm[1]
+    d31, d32, d33 = dcm[2]
+
+    # Compute the quaternion
+    q0 = 0.5 * np.sqrt(1 + d11 + d22 + d33)
+    q1 = (d32 - d23) / (4 * q0)
+    q2 = (d13 - d31) / (4 * q0)
+    q3 = (d21 - d12) / (4 * q0)
+    np.array([q0, q1, q2, q3])
+    q = normalize_quaternion(np.array([q0, q1, q2, q3]))
+    return q

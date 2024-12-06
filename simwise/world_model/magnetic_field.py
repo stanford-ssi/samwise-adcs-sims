@@ -2,8 +2,18 @@ import os
 import igrf
 import sys
 from datetime import datetime
+from simwise.utils.time import jd_to_dt_utc
 
-def magnetic_field(lat, lon, alt):
+# First ensure IGRF is built
+# try:
+#     igrf.build()
+# except AttributeError as e:
+#     igrf.base.build()
+# except Exception as e:
+#     print(f"Error building IGRF: {str(e)}")
+#     raise e
+
+def magnetic_field(lla_wgs84, jd):
     """
     Calculate magnetic field components using IGRF-13 model.
     
@@ -21,36 +31,20 @@ def magnetic_field(lat, lon, alt):
     xarray.Dataset
         Dataset containing magnetic field components
     """
-    # First ensure IGRF is built
-    try:
-        igrf.build()
-    except Exception as e:
-        print(f"Error building IGRF: {str(e)}")
-        return None
+    lat, lon, alt = lla_wgs84
 
     try:
         # Get current date in the format IGRF expects
-        date = datetime.now().strftime('%Y-%m-%d')
+        date = jd_to_dt_utc(jd).strftime('%Y-%m-%d')
         
         # Calculate magnetic field
-        B = igrf.igrf(date, glat=lat, glon=lon, alt_km=alt)
-        return B
+        B = igrf.igrf(date, glat=lat, glon=lon, alt_km=alt/1e3)
+        
+        return float(B.east), float(B.north), float(B.down)
         
     except Exception as e:
         print(f"Error calculating magnetic field: {str(e)}")
         print(f"IGRF package path: {os.path.dirname(igrf.__file__)}")
         print(f"Python version: {sys.version}")
         return None
-
-# Test function
-# USE ECF
-try:
-    result = magnetic_field(90, 0, 100)
-    if result is not None:
-        print(f"Magnetic field at 90°N, 0°E, 100km altitude:")
-        print(f"North component = {result['north'].item():.1f} nT")
-        print(f"East component = {result['east'].item():.1f} nT")
-        print(f"Down component = {result['down'].item():.1f} nT")
-        print(f"Total field = {result['total'].item():.1f} nT")
-except Exception as e:
-    print(f"Failed to calculate magnetic field: {str(e)}")
+    
