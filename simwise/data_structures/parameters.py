@@ -96,6 +96,20 @@ class Parameters:
         # Attitude target
         self.pointing_mode = "SunPointingNadirConstrained"
 
+        # Sensors
+        self.magnetic_field_sensor_noise = 15e-9 # 15 nT from RM3100 user manual at 200 counts
+        self.photodiode_noise = 0.01 # 1% error TODO update this based on dark current
+                                     # Should also follow a Poisson distribution instead of Gaussian
+        self.normals = np.array([
+            [1, 0, 0],  # +X
+            [-1, 0, 0], # -X
+            [0, 1, 0],  # +Y
+            [0, -1, 0], # -Y
+            [0, 0, 1],  # +Z
+            [0, 0, -1]  # -Z
+        ])
+
+
         # Initial orbit properties
         self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)
         self.e = ScalarParameter(0.005)

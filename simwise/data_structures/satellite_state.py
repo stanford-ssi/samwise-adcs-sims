@@ -20,8 +20,9 @@ import simwise.constants
 from simwise.forces.drag import dragPertubationTorque
 from simwise.world_model.atmosphere import compute_density
 from simwise.world_model.magnetic_field import magnetic_field
-from simwise.world_model.sun import approx_sun_position
+from simwise.world_model.sun import approx_sun_position, eclipse_model
 from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
+from simwise.navigation.sensor_models.sun_sensor import sun_in_body_frame, generate_photodiode_measurements
 
 
 class SatelliteState:
@@ -199,10 +200,16 @@ class SatelliteState:
         self.magnetic_field = magnetic_field(self.lla_wgs84, self.jd)
         self.atmospheric_density = compute_density(self.h, self.lla_wgs84[0], self.jd)
         self.r_sun_eci = approx_sun_position(self.jd)
+        self.eclipse = eclipse_model(self.r_sun_eci, self.r_eci)
 
     #TODO this is messy, clean up
     def update_forces(self, params):
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
+
+    def update_measurements(self, params):
+        self.B_meas = self.magnetic_field + np.random.normal(0, params.noise_magnetic_field, 3)
+        self.r_sun_body = sun_in_body_frame(self.r_sun_eci, self.q)
+        self.photodiode_meas = generate_photodiode_measurements(self.r_sun_body, params.photodiode_normals) + np.random.normal(0, params.noise_photodiode, 4)
         
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###

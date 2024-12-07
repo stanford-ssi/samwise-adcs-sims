@@ -25,6 +25,23 @@ def ECEF_to_topocentric(r, ε = 1e-11):
     h = ((np.linalg.norm([r[0], r[1]])/np.cos(ϕ))-N)
     return (np.rad2deg(ϕ),np.rad2deg(λ),h)
 
+def END_to_ECEF(r_end, r_topocentric):
+    # Convert latitude and longitude to radians
+    lat = np.radians(r_topocentric[0])
+    lon = np.radians(r_topocentric[1])
+    
+    # Rotation matrix from END to ECEF
+    # TODO double check if this is correct
+    R_end_to_ecef = np.array([
+        [-np.sin(lon), -np.sin(lat) * np.cos(lon), np.cos(lat) * np.cos(lon)],
+        [np.cos(lon), -np.sin(lat) * np.sin(lon), np.cos(lat) * np.sin(lon)],
+        [0, np.cos(lat), np.sin(lat)]
+    ])
+    
+    # Transform the vector
+    r_ecef = np.dot(R_end_to_ecef, r_end)
+    
+    return r_ecef
 
 def mee_to_rv(mee, µ):
     p = mee[0]

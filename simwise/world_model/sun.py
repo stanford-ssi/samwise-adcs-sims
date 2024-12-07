@@ -1,4 +1,5 @@
 import numpy as np
+from simwise import constants
 
 def approx_sun_position(JD):
     # convert to days after J2000
@@ -14,3 +15,12 @@ def approx_sun_position(JD):
     # rotate to ECI by rotation of ecliptic to equatorial plane
     unit_vector = [np.cos(λ_sun_rad), np.sin(λ_sun_rad)*np.cos(ε_rad), np.sin(λ_sun_rad)*np.sin(ε_rad)]
     return(unit_vector)
+
+def eclipse_model(r_sun, r_sat):
+    # calculate the angle between the sun and the satellite
+    sat_unit_vector = r_sat / np.linalg.norm(r_sat)
+    Ψ = np.arccos(np.dot(r_sun, sat_unit_vector))
+    # calculate distance into the cone of the shadow
+    a = np.array(r_sat) * np.sin(Ψ)
+
+    return Ψ > np.pi/2 and a < constants.EARTH_RADIUS_M
