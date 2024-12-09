@@ -100,7 +100,7 @@ class Parameters:
         self.magnetic_field_sensor_noise = 15e-9 # 15 nT from RM3100 user manual at 200 counts
         self.photodiode_noise = 0.01 # 1% error TODO update this based on dark current
                                      # Should also follow a Poisson distribution instead of Gaussian
-        self.normals = np.array([
+        self.photodiode_normals = np.array([
             [1, 0, 0],  # +X
             [-1, 0, 0], # -X
             [0, 1, 0],  # +Y
@@ -109,6 +109,22 @@ class Parameters:
             [0, 0, -1]  # -Z
         ])
 
+        # EKF parameters
+        # Process noise
+        self.Q = np.diag([
+            1e-9, 1e-9, 1e-9, 1e-9,     # Quaternion
+            1e-9, 1e-9, 1e-9            # Angular velocity
+        ])
+        # Measurement noise
+        self.R = np.diag([
+            15e-9, 15e-9, 15e-9,        # Sun sensor
+            0.01, 0.01, 0.01            # Magnetometer
+        ])
+        # Covariance
+        self.P = np.diag([
+            3e-3, 3e-3, 3e-3, 3e-3,     # Quaternion
+            1e-6, 1e-6, 1e-6            # Angular velocity
+        ])
 
         # Initial orbit properties
         self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)

@@ -3,37 +3,45 @@ from simwise.math.quaternion import rotate_vector_by_quaternion
 
 # Define photodiode normals for cube faces
 
-def sun_in_body_frame(r_sun_eci, q):
+def sun_in_body_frame(v_sun_eci, q):
     """Generate a measurement for the current state"""
     # Sun sensor measurement
-    return rotate_vector_by_quaternion(r_sun_eci, q)
+    return rotate_vector_by_quaternion(v_sun_eci, q)
 
 def generate_photodiode_measurements(r_sun_body, photodiode_normals):
+    # TODO interpolate the datasheet curve
     half_angle = np.radians(70)  # Convert to radians
     max_response = 3.3          # Maximum voltage
     
     measurements = []
-    for normal in normals:
+    for normal in photodiode_normals:
         # Calculate cosine of angle between sun vector and photodiode normal
         cos_theta = np.dot(normal, r_sun_body)
         
-        # Ensure the value is within valid range
-        cos_theta = np.clip(cos_theta, -1, 1)
-        
-        # Convert to angle
-        theta = np.arccos(cos_theta)
-        
-        # Calculate response
-        response = np.sin(theta)
-        # if theta <= half_angle:
-        #     response = np.sin(theta)
-        # else:
-        #     response = 0
+        # If the sun is behind the photodiode, the response is zero
+        # TODO add earth albedo
+        if cos_theta <= 0:
+            response = 0
+        else:
+            response = cos_theta
         
         # Map to voltage
         voltage = response * max_response
         measurements.append(voltage)
-    
+        
     return np.array(measurements)
 
 
+def sun_vector_ospf(measurements):
+    # Convert measurements to unit vectors
+    measurements = measurements / np.linalg.norm(measurements)
+    
+    # Calculate the sun vector
+    sun_vector = np.zeros(3)
+    sun_vector = np.array([
+        measurements[0] - measurements[1], # x+ - x-
+        measurements[2] - measurements[3], # y+ - y-
+        measurements[4] - measurements[5]  # z+ - z-
+    ])
+    
+    return sun_vector / np.linalg.norm(sun_vector)

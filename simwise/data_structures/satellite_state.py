@@ -22,7 +22,7 @@ from simwise.world_model.atmosphere import compute_density
 from simwise.world_model.magnetic_field import magnetic_field
 from simwise.world_model.sun import approx_sun_position, eclipse_model
 from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
-from simwise.navigation.sensor_models.sun_sensor import sun_in_body_frame, generate_photodiode_measurements
+from simwise.navigation.sensor_models.sun_sensor import sun_in_body_frame, generate_photodiode_measurements, sun_vector_ospf
 
 
 class SatelliteState:
@@ -39,6 +39,7 @@ class SatelliteState:
 
     # Attitude info
     control_torque: np.ndarray  # [Nm]
+    torque_applied: np.ndarray  # [Nm] (this is control torque + noise for now)
     error_angle: float  # [rad]
 
     # Orbital elements in multiple forms
@@ -65,8 +66,17 @@ class SatelliteState:
     # Euler Angles
     e_angles: np.ndarray  # [radians]
     
+    # Filter
+    P: np.ndarray
+    Q: np.ndarray
+    R: np.ndarray
+    x_k_minus: np.ndarray
+    P_k_minus: np.ndarray
+    x_k: np.ndarray
+    P_k: np.ndarray
+    attitude_knowedge_error: np.ndarray
     
-    # Pertubation Forces:
+    # Pertubation Forces:   
     Drag: np.ndarray   # [N]
     
 
@@ -83,12 +93,12 @@ class SatelliteState:
 
         # TODO implement enums here and for control mode
         if params.pointing_mode == "SunPointingNadirConstrained":
-            self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
+            self.q_d = compute_sun_pointing_nadir_constrained(self.v_sun_eci, self.r_eci)
         else:
             raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
 
     def compute_control_torque(self, params: Parameters):
-        """Compute the desired control torque for the current state\
+        """Compute the desired control torque for the current state
             
         """
         x_attitude = np.hstack((self.q, self.w))
@@ -116,7 +126,6 @@ class SatelliteState:
         #TODO: Implement a control allocation algorithm
         if self.allocation_mode == "MagicActuators":
             self.control_torque = self.desired_control_torque
-            self.control_torque += np.random.normal(0, params.noise_torque, 3)
         else:
             raise ValueError(f"Unknown control allocation mode '{self.allocation_mode}'")
         
@@ -140,7 +149,7 @@ class SatelliteState:
         ])
 
         def attitude_ode(t, x):
-            return attitude_dynamics(x_attitude, params.dt_attitude, inertia_inv, inertia_diff, self.control_torque)
+            return attitude_dynamics(x_attitude, params.dt_attitude, inertia_inv, inertia_diff, self.torque_applied)
 
         sol = solve_ivp(
             attitude_ode,
@@ -197,20 +206,30 @@ class SatelliteState:
     def update_environment(self, params):
         ''' Solve directly for pertubation torques in one call'''
         
-        self.magnetic_field = magnetic_field(self.lla_wgs84, self.jd)
+        self.v_mag_eci = magnetic_field(self.lla_wgs84, self.jd)
         self.atmospheric_density = compute_density(self.h, self.lla_wgs84[0], self.jd)
-        self.r_sun_eci = approx_sun_position(self.jd)
-        self.eclipse = eclipse_model(self.r_sun_eci, self.r_eci)
+        self.v_sun_eci = approx_sun_position(self.jd)
+        self.eclipse = eclipse_model(self.v_sun_eci, self.r_eci)
 
     #TODO this is messy, clean up
     def update_forces(self, params):
         self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
 
+    # this is NOT kalman filter, this is what is calculating the measurements
+    # that are fed into the kalman filter
+    # hence we use the real state values, not the filtered ones
     def update_measurements(self, params):
-        self.B_meas = self.magnetic_field + np.random.normal(0, params.noise_magnetic_field, 3)
-        self.r_sun_body = sun_in_body_frame(self.r_sun_eci, self.q)
-        self.photodiode_meas = generate_photodiode_measurements(self.r_sun_body, params.photodiode_normals) + np.random.normal(0, params.noise_photodiode, 4)
-        
+        self.v_mag_meas = rotate_vector_by_quaternion(self.v_mag_eci, self.x_k_minus[:4]) + np.random.normal(0, params.magnetic_field_sensor_noise, 3)
+        self.v_mag_eci = self.v_mag_eci / np.linalg.norm(self.v_mag_eci)
+        self.v_mag_meas = self.v_mag_meas / np.linalg.norm(self.v_mag_meas)
+            
+        self.v_sun_body = sun_in_body_frame(self.v_sun_eci, self.q)
+        self.photodiode_meas = generate_photodiode_measurements(self.v_sun_body, params.photodiode_normals) + np.random.normal(0, params.photodiode_noise, params.photodiode_normals.shape[0])
+        self.v_sun_meas = sun_vector_ospf(self.photodiode_meas)
+
+        self.v_sun_eci = self.v_sun_eci / np.linalg.norm(self.v_sun_eci)
+        self.v_sun_meas = self.v_sun_meas / np.linalg.norm(self.v_sun_meas)
+
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###
     ###———————————————————————————————————————————————————————————————————————###

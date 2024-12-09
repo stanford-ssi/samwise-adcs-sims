@@ -2,7 +2,7 @@ import numpy as np
 
 from simwise.math.quaternion import dcm_to_quaternion
 
-def compute_sun_pointing_nadir_constrained(r_sun_eci, r_eci):
+def compute_sun_pointing_nadir_constrained(v_sun_eci, r_eci):
     """
     This function computes the control torque needed to point the satellite towards the sun while maintaining nadir pointing.
     """
@@ -10,7 +10,7 @@ def compute_sun_pointing_nadir_constrained(r_sun_eci, r_eci):
     # TODO: replace this with sun position (not normalized) and subtract
     # current position
     # return np.array([1.0, 0.0, 0.0, 0.0])
-    sun_eci = -np.array(r_sun_eci) / np.linalg.norm(r_sun_eci)
+    sun_eci = -np.array(v_sun_eci) / np.linalg.norm(v_sun_eci)
     
     # Get the nadir vector in the ECI frame
     nadir_eci = -np.array(r_eci) / np.linalg.norm(r_eci)

@@ -8,6 +8,8 @@ from tqdm import tqdm
 from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
 from simwise.data_structures.satellite_state import SatelliteState, interpolate_state
 from simwise.math.coordinate_transforms import coe_to_mee
+from simwise.navigation.attitude_ekf import ekf_measurement_update, ekf_time_update
+from simwise.math.quaternion import error_quaternion, regularize_quaternion
 
 def init_state(params):
     state = SatelliteState()
@@ -30,23 +32,27 @@ def init_state(params):
     state.control_mode = params.control_mode
     state.allocation_mode = params.allocation_mode
 
+    # Initial filter conditions
+    state.x_k = np.hstack((state.q, state.w))
+    state.P_k = params.P
+    state.Q = params.Q
+    state.R = params.R
+
+    state.update_other_orbital_state_representations(params)
+    state.update_environment(params)
+
     return state
 
 def run_one(params):
     """This is the main function that runs the sim for a single set of params
     """
     state = init_state(params)
+    infrequent_state_next = copy.deepcopy(state)
 
     states = []
     times = []
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
-    
-    # Initialize the state of the orbit
-    # TODO make an initialization function
-    state.update_other_orbital_state_representations(params)
-    state.update_environment(params)
-    infrequent_state_next = copy.deepcopy(state)
 
     for i in range(num_points_attitude):
         
@@ -57,9 +63,9 @@ def run_one(params):
             # TODO organize this
             state.orbit_mee = infrequent_state_prev.orbit_mee
             state.orbit_keplerian = infrequent_state_prev.orbit_keplerian
-            state.magnetic_field = infrequent_state_prev.magnetic_field
+            state.v_mag_eci = infrequent_state_prev.v_mag_eci
             state.atmospheric_density = infrequent_state_prev.atmospheric_density
-            state.r_sun_eci = infrequent_state_prev.r_sun_eci
+            state.v_sun_eci = infrequent_state_prev.v_sun_eci
 
             # Propagate orbit for greater time step - orbit
             infrequent_state_next.propagate_orbit(params)
@@ -72,9 +78,9 @@ def run_one(params):
             state.orbit_mee = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_mee")
             state.orbit_keplerian = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_keplerian")
             state.orbit_keplerian[5] = state.orbit_keplerian[5] % (2 * np.pi)
-            state.magnetic_field = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="magnetic_field")
+            state.v_mag_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="v_mag_eci")
             state.atmospheric_density = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="atmospheric_density")
-            state.r_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="r_sun_eci")   
+            state.v_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="v_sun_eci")   
     
         # Update other state representations
         state.update_other_orbital_state_representations(params)
@@ -89,13 +95,24 @@ def run_one(params):
         state.allocate_control_torque(params)
 
         # Propagate attitude at every step - smaller timestep
+        state.torque_applied = state.control_torque + np.random.normal(0, params.noise_torque, 3)
         state.propagate_attitude(params)
         
         # Update forces
         state.update_forces(params)
 
+        # Update sensor measurements
+        state.x_k_minus, state.P_k_minus = ekf_time_update(state.x_k, state.P_k, state.Q, params.dt_attitude, params.inertia, state.control_torque)
+
+        state.update_measurements(params)
+        state.v_sun_eci = state.v_sun_eci / np.linalg.norm(state.v_sun_eci)
+        
+        state.x_k, state.P_k = ekf_measurement_update(state.x_k_minus, state.P_k_minus, state.R, state.v_sun_meas, state.v_mag_meas, state.v_sun_eci, state.v_mag_eci)
+
         # Define time in terms of smaller timestep - attitude
         state.propagate_time(params, params.dt_attitude)
+
+        state.attitude_knowedge_error = regularize_quaternion(error_quaternion(state.x_k[:4], state.q))
 
         states.append(copy.deepcopy(state))
         times.append(state.t)
