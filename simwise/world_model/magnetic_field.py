@@ -1,8 +1,10 @@
 import os
 import igrf
 import sys
+import numpy as np
 from datetime import datetime
 from simwise.utils.time import jd_to_dt_utc
+from simwise.math.coordinate_transforms import END_to_ECEF
 
 # First ensure IGRF is built
 # try:
@@ -39,8 +41,10 @@ def magnetic_field(lla_wgs84, jd):
         
         # Calculate magnetic field
         B = igrf.igrf(date, glat=lat, glon=lon, alt_km=alt/1e3)
+        B_END = np.array((float(B.east), float(B.north), float(B.down)))
+        B_ECEF = END_to_ECEF(B_END, lla_wgs84)
         
-        return float(B.east), float(B.north), float(B.down)
+        return B_ECEF
         
     except Exception as e:
         print(f"Error calculating magnetic field: {str(e)}")

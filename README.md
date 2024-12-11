@@ -43,5 +43,10 @@ e.g. `python3 simwise/main.py --run simulate_attitude`
 > See the rust code for the actual board here:
 > https://github.com/polygnomial/adcs
 
+- Magnetorquer Only Control: https://rexlab.ri.cmu.edu/papers/magnetorquer_only.pdf
+- Equinoctial Elements: https://spsweb.fltops.jpl.nasa.gov/portaldataops/mpg/MPG_Docs/Source%20Docs/EquinoctalElements-modified.pdf
+- Extrinsic vs Intrinsic: https://dominicplein.medium.com/extrinsic-intrinsic-rotation-do-i-multiply-from-right-or-left-357c38c1abfd
+
+
 Started 10/17/2024
 Stanford Student Space Initiative
