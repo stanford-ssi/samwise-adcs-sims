@@ -3,6 +3,7 @@ import numpy as np
 
 # Orbital Properties:
 EARTH_RADIUS_M = 6378e3     # m
+EARTH_J2 = 0.00108262672    # JGM2
 MU_EARTH = 3.986e14         # m^3 s^-2
 
 SATELLITE_ALTITUDE = 450e3  # m TODO - move to orbit

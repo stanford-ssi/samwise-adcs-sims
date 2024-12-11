@@ -25,6 +25,16 @@ def ECEF_to_topocentric(r, ε = 1e-11):
     h = ((np.linalg.norm([r[0], r[1]])/np.cos(ϕ))-N)
     return (np.rad2deg(ϕ),np.rad2deg(λ),h)
 
+def topocentric_to_ECEF(lat, lon, alt):
+    # WGS84 constants
+    e_elipsiod = 0.08182
+    r_e = 6378137.0 # Semi-major axis (meters)
+    N = r_e/(1 - (e_elipsiod**2 * np.sin(np.radians(lat))**2))**0.5
+    x = (N + alt) * np.cos(np.radians(lat)) * np.cos(np.radians(lon))
+    y = (N + alt) * np.cos(np.radians(lat)) * np.sin(np.radians(lon))
+    z = (N * (1 - e_elipsiod**2) + alt) * np.sin(np.radians(lat))
+    return np.array([x, y, z])
+
 def END_to_ECEF(r_end, r_topocentric):
     # Convert latitude and longitude to radians
     lat = np.radians(r_topocentric[0])

@@ -53,6 +53,25 @@ def mee_dynamics(elements, mu, dt, f_perturbation):
     return A @ f_perturbation + b
 
 
+@jit(nopython=True)
+def j2_perturbation(elements):
+    p = elements[0] # semi latus rectum [meters]
+    f = elements[1]
+    g = elements[2]
+    h = elements[3]
+    k = elements[4]
+    L = elements[5] # true longitude [rad]
+    # calculate useful values
+    w = 1 + f*np.cos(L) + g*np.sin(L)
+    r = p/w
+    denominator = (1 + h**2 + k**2)**2
+    pre_factor = -((MU_EARTH*EARTH_J2*EARTH_RADIUS_M**2)/(r**4))
+    numerator_factor = h*np.sin(L) - k*np.cos(L)
+    # calculate J2 acceleration in each RTN direction
+    accel_r = pre_factor * (1.5) * (1 - ((12*numerator_factor**2)/denominator))
+    accel_t = pre_factor * (12.) * ((numerator_factor*(h*np.cos(L)+k*np.sin(L)))/denominator)
+    accel_n = pre_factor * (6.) * ((numerator_factor*(1 - h**2 - k**2))/denominator)
+    return [accel_r, accel_t, accel_n]
 
 def get_altitude(rv, radius_earth=6371):
     """

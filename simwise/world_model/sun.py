@@ -21,6 +21,7 @@ def eclipse_model(r_sun, r_sat):
     sat_unit_vector = r_sat / np.linalg.norm(r_sat)
     Ψ = np.arccos(np.dot(r_sun, sat_unit_vector))
     # calculate distance into the cone of the shadow
-    a = np.array(r_sat) * np.sin(Ψ)
+    a = np.linalg.norm(r_sat) * np.sin(Ψ)
 
     return Ψ > np.pi/2 and a < constants.EARTH_RADIUS_M
+    

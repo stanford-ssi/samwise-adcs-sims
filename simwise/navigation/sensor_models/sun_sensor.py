@@ -45,3 +45,10 @@ def sun_vector_ospf(measurements):
     ])
     
     return sun_vector / np.linalg.norm(sun_vector)
+
+def sun_vector_pyramid(y_m, y_p, z_m, z_p):
+    psi = np.arctan2(y_m, y_p)
+    theta = np.arctan2(z_m, z_p)
+    
+    return psi, theta
+    

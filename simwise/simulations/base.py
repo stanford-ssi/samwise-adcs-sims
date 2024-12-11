@@ -1,4 +1,6 @@
+import os
 import copy
+import datetime
 from multiprocessing import Pool, cpu_count
 
 
@@ -9,7 +11,8 @@ from simwise.data_structures.parameters import ArrayParameter, QuaternionParamet
 from simwise.data_structures.satellite_state import SatelliteState, interpolate_state
 from simwise.math.coordinate_transforms import coe_to_mee
 from simwise.navigation.attitude_ekf import ekf_measurement_update, ekf_time_update
-from simwise.math.quaternion import error_quaternion, regularize_quaternion
+from simwise.navigation.triad import triad
+from simwise.math.quaternion import error_quaternion, regularize_quaternion, dcm_to_quaternion
 
 def init_state(params):
     state = SatelliteState()
@@ -24,11 +27,15 @@ def init_state(params):
     # Initial time conditions
     state.jd = params.epoch_jd
 
+    state.update_other_orbital_state_representations(params)
+    state.update_environment(params)
+
+    # Target attitude
+    state.compute_target_attitude(params)
+
     # Initial attitude conditions
-    state.q = params.q_initial
-    state.w = params.w_initial
-    state.q_d = params.q_desired
-    state.w_d = params.w_desired
+    state.q = state.q_d
+    state.w = state.w_d
     state.control_mode = params.control_mode
     state.allocation_mode = params.allocation_mode
 
@@ -36,10 +43,7 @@ def init_state(params):
     state.x_k = np.hstack((state.q, state.w))
     state.P_k = params.P
     state.Q = params.Q
-    state.R = params.R
-
-    state.update_other_orbital_state_representations(params)
-    state.update_environment(params)
+    state.R = params.R    
 
     return state
 
@@ -55,7 +59,6 @@ def run_one(params):
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
 
     for i in range(num_points_attitude):
-        
         # Propagate orbit for greater time step - orbit
         if i % int(params.dt_orbit / params.dt_attitude) == 0:
             # Save the current state for linear interpolation in the future
@@ -101,13 +104,22 @@ def run_one(params):
         # Update forces
         state.update_forces(params)
 
-        # Update sensor measurements
-        state.x_k_minus, state.P_k_minus = ekf_time_update(state.x_k, state.P_k, state.Q, params.dt_attitude, params.inertia, state.control_torque)
+        # Perform attitude determination
+        if params.attitude_determination_mode == "EKF":
+            state.x_k_minus, state.P_k_minus = ekf_time_update(state.x_k, state.P_k, state.Q, params.dt_attitude, params.inertia, state.control_torque)
+            # state.x_k = state.x_k_minus
+            # state.P_k = state.P_k_minus
 
-        state.update_measurements(params)
-        state.v_sun_eci = state.v_sun_eci / np.linalg.norm(state.v_sun_eci)
-        
-        state.x_k, state.P_k = ekf_measurement_update(state.x_k_minus, state.P_k_minus, state.R, state.v_sun_meas, state.v_mag_meas, state.v_sun_eci, state.v_mag_eci)
+            state.update_measurements(params)
+            state.v_sun_eci = state.v_sun_eci / np.linalg.norm(state.v_sun_eci)
+            state.x_k, state.P_k = ekf_measurement_update(state.x_k_minus, state.P_k_minus, state.R, state.v_sun_meas, state.v_mag_meas, state.v_sun_eci, state.v_mag_eci)
+            state.x_k[:4] = regularize_quaternion(state.x_k[:4])
+        elif params.attitude_determination_mode == "TRIAD":
+            state.update_measurements(params)
+            R = triad(state.v_sun_eci, state.v_mag_eci, state.v_sun_meas, state.v_mag_meas)
+            state.x_k[:4] = dcm_to_quaternion(R)
+        else:
+            raise ValueError("Invalid attitude determination mode")
 
         # Define time in terms of smaller timestep - attitude
         state.propagate_time(params, params.dt_attitude)
@@ -177,4 +189,10 @@ def run_dispersions(params, runner=run_one):
                 times_from_dispersions.append(times)
                 pbar.update()
     
+    sim_data_dir = "data"
+    if not os.path.exists(sim_data_dir):
+        os.makedirs(sim_data_dir)
+    curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    np.save(f"sim_data_dir/states_{curr_time}.npy", np.array(states_from_dispersions))
+    np.save(f"sim_data_dir/times_{curr_time}.npy", np.array(times_from_dispersions))
     return np.array(states_from_dispersions), np.array(times_from_dispersions)

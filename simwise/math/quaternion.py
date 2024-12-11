@@ -15,6 +15,7 @@ def normalize_quaternion(q):
 
 import numpy as np
 
+@jit(nopython=True)
 def regularize_quaternion(q):
     """
     Regularize a quaternion so that it has a consistent 'direction'.
@@ -31,28 +32,33 @@ def regularize_quaternion(q):
     np.ndarray: The regularized quaternion.
     """
     # Make a copy to avoid modifying in-place
-    q = np.array(q, dtype=float)
+    _q = q
+    q = np.ones(4)
+    q[1] = _q[1]
+    q[2] = _q[2]
+    q[3] = _q[3]
+    q[0] = _q[0]
 
     # If q_w is positive, we are good
-    if q[0] > 0:
+    if q[0] > 0.0:
         return q
 
     # If q_w is zero or negative, we need to decide how to handle:
-    if q[0] < 0:
+    if q[0] < 0.0:
         # Just flip all signs if q_w < 0
         q = -q
     else:
         # q_w == 0
         # Fallback rule: ensure the first non-zero component among (q_x, q_y, q_z)
         # is positive. For example:
-        if q[1] < 0:
+        if q[1] < 0.0:
             q = -q
-        elif q[1] == 0:
-            if q[2] < 0:
+        elif q[1] == 0.0:
+            if q[2] < 0.0:
                 q = -q
-            elif q[2] == 0:
+            elif q[2] == 0.0:
                 # If q_y is also zero, check q_z
-                if q[3] < 0:
+                if q[3] < 0.0:
                     q = -q
                 # If q_z also zero (unlikely for a valid unit quaternion), do nothing.
 
@@ -193,7 +199,7 @@ def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
 
 def dcm_to_quaternion(dcm):
     """
-    Convert a direction cosine matrix to a quaternion.
+    Convert a direction cosine matrix to a quaternion (scalar-first convention).
 
     Parameters:
     dcm (np.ndarray): A 3x3 direction cosine matrix.
@@ -240,7 +246,14 @@ def dcm_to_quaternion(dcm):
         q_x = (d31 + d13) / (4.0 * q_z)
         q_y = (d23 + d32) / (4.0 * q_z)
 
-    return np.array([q_w, q_x, q_y, q_z])
+    q = np.array([q_w, q_x, q_y, q_z])
+
+    # Regularize quaternion: enforce scalar part (w) to be non-negative
+    if q[0] < 0:
+        q = -q
+
+    return q
+
 
 def quaternion_to_dcm(q):
     """

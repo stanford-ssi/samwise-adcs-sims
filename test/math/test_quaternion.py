@@ -54,5 +54,5 @@ def test_error_quaternion():
     error = error_quaternion(q, q_hat)
     error = regularize_quaternion(error)
     q = dcm_to_quaternion(passive_dcm("z", np.pi))
-q = regularize_quaternion(q)
+    q = regularize_quaternion(q)
     assert np.allclose(error, dcm_to_quaternion(passive_dcm("z", -np.pi)))

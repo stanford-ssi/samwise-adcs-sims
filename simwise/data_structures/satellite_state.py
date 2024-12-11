@@ -21,8 +21,15 @@ from simwise.forces.drag import dragPertubationTorque
 from simwise.world_model.atmosphere import compute_density
 from simwise.world_model.magnetic_field import magnetic_field
 from simwise.world_model.sun import approx_sun_position, eclipse_model
-from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
-from simwise.navigation.sensor_models.sun_sensor import sun_in_body_frame, generate_photodiode_measurements, sun_vector_ospf
+from simwise.guidance.sun_pointing import (
+    compute_sun_pointing_nadir_constrained,
+    compute_nadir_pointing_velocity_constrained
+)
+from simwise.navigation.sensor_models.sun_sensor import (
+    sun_in_body_frame, 
+    generate_photodiode_measurements, 
+    sun_vector_ospf
+)
 
 
 class SatelliteState:
@@ -94,6 +101,8 @@ class SatelliteState:
         # TODO implement enums here and for control mode
         if params.pointing_mode == "SunPointingNadirConstrained":
             self.q_d = compute_sun_pointing_nadir_constrained(self.v_sun_eci, self.r_eci)
+        if params.pointing_mode == "NadirPointingVelocityConstrained":
+            self.q_d, self.w_d = compute_nadir_pointing_velocity_constrained(self.r_eci, self.v_eci, params.orbit_period)
         else:
             raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
 
@@ -102,7 +111,7 @@ class SatelliteState:
             
         """
         x_attitude = np.hstack((self.q, self.w))
-        x_attitude_desired = np.hstack((self.q_d, self.w_d))
+        x_attitude_desired = self.x_k
 
         error_angle, error_vector = quaternions_to_axis_angle(self.q, self.q_d)
         self.error_angle = error_angle
@@ -161,15 +170,17 @@ class SatelliteState:
         x_attitude_new = sol.y[:, -1]
 
         # Derive Attitude State Information:
-        self.q = x_attitude_new[:4]                                 # Quaternion
+        self.q = regularize_quaternion(x_attitude_new[:4])                                 # Quaternion
         self.w = x_attitude_new[4:]                                 # Angular Velocity
         self.e_angles = quaternion_to_euler(self.q, sequence="zyx")    # Euler Angles
 
     def propagate_orbit(self, params: Parameters):
         """Update this state to represent advancing orbit"""
-        f_perturbation = np.zeros(3)
-
+        
         def orbit_ode(t, mee):
+            f_perturbation = np.zeros(3)
+            if params.use_J2:
+                f_perturbation += j2_perturbation(mee)
             return mee_dynamics(mee, simwise.constants.MU_EARTH, params.dt_orbit, f_perturbation)
 
         sol = solve_ivp(
@@ -207,26 +218,27 @@ class SatelliteState:
         ''' Solve directly for pertubation torques in one call'''
         
         self.v_mag_eci = magnetic_field(self.lla_wgs84, self.jd)
+        # self.v_mag_eci = np.array([0, 0, 1])
         self.atmospheric_density = compute_density(self.h, self.lla_wgs84[0], self.jd)
         self.v_sun_eci = approx_sun_position(self.jd)
+        # self.v_sun_eci = np.array([1, 0, 0])
         self.eclipse = eclipse_model(self.v_sun_eci, self.r_eci)
 
     #TODO this is messy, clean up
     def update_forces(self, params):
-        self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
+        self.Drag = np.array([0, 0, 0]) #dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
 
     # this is NOT kalman filter, this is what is calculating the measurements
     # that are fed into the kalman filter
     # hence we use the real state values, not the filtered ones
     def update_measurements(self, params):
-        self.v_mag_meas = rotate_vector_by_quaternion(self.v_mag_eci, self.x_k_minus[:4]) + np.random.normal(0, params.magnetic_field_sensor_noise, 3)
+        self.v_mag_meas = rotate_vector_by_quaternion(self.v_mag_eci + np.random.normal(0, params.magnetic_field_sensor_noise, 3), self.q)
         self.v_mag_eci = self.v_mag_eci / np.linalg.norm(self.v_mag_eci)
         self.v_mag_meas = self.v_mag_meas / np.linalg.norm(self.v_mag_meas)
             
-        self.v_sun_body = sun_in_body_frame(self.v_sun_eci, self.q)
+        self.v_sun_body = rotate_vector_by_quaternion(self.v_sun_eci, self.q)
         self.photodiode_meas = generate_photodiode_measurements(self.v_sun_body, params.photodiode_normals) + np.random.normal(0, params.photodiode_noise, params.photodiode_normals.shape[0])
         self.v_sun_meas = sun_vector_ospf(self.photodiode_meas)
-
         self.v_sun_eci = self.v_sun_eci / np.linalg.norm(self.v_sun_eci)
         self.v_sun_meas = self.v_sun_meas / np.linalg.norm(self.v_sun_meas)
 
