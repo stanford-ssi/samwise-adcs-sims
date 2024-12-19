@@ -69,7 +69,7 @@ class Parameters:
             **overrides: Key-value pairs where keys are parameter names and values are Parameter instances.
         """
         # Simulation configuration
-        self.num_dispersions = 20
+        self.num_dispersions = 100
 
         # Time parameters
         self.dt_orbit = 120
@@ -98,8 +98,8 @@ class Parameters:
 
         # Sensors
         self.magnetic_field_sensor_noise = 15 # 15 nT from RM3100 user manual at 200 counts
-        self.photodiode_noise = 0.01 # 1% error TODO update this based on dark current
-                                     # Should also follow a Poisson distribution instead of Gaussian
+        self.photodiode_noise = 0.02 # 2% error based on 25k measurements (at low angle to sun)
+                                     # TODO add dark current that follows a Poisson distribution
         self.photodiode_normals = np.array([
             [1, 0, 0],  # +X
             [-1, 0, 0], # -X
@@ -148,17 +148,18 @@ class Parameters:
         # Satellite Cp and Cg
         self.Cp = ArrayParameter([0, 0, 0])
         self.Cg = ArrayParameter([20 / 4, 10 * np.sqrt(2) / 2, 10 * np.sqrt(2) / 2])
-
-        # Generate ECEF to PN table
-        # This is NOT a regular parameter of the table, and should not be dispersed
-        self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)
-
+        
         # Apply overrides
         self.overrides = overrides
         for key, value in overrides.items():
             if not hasattr(self, key):
                 raise ValueError(f"Unknown parameter '{key}' in overrides.")
             setattr(self, key, value)
+            
+        # Generate ECEF to PN table
+        # This is NOT a regular parameter of the table, and should not be dispersed
+        self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)
+
 
     def generate_dispersions(self, N):
         """

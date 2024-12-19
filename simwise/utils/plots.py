@@ -52,10 +52,18 @@ def plot_states_plotly(states: list[SatelliteState],
             go.Scatter(x=x_values, y=y_values, line=dict(color=colors[i])),
             row=i+1, col=1
         )
-        fig.update_yaxes(title_text=y_label, row=i+1, col=1)
-        fig.update_xaxes(title_text=x_label, row=i+1, col=1)
+        fig.update_yaxes(title_text=y_label, row=i+1, col=1, gridcolor="gray",
+            showgrid=True)
+        fig.update_xaxes(title_text=x_label, row=i+1, col=1, gridcolor="gray",
+            showgrid=True)
 
-    fig.update_layout(title=title_text, showlegend=False, height=500 * num_plots)
+    fig.update_layout(
+        title=title_text, 
+        showlegend=False, 
+        height=500 * num_plots,
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
+    )
 
     return fig
 
@@ -97,16 +105,23 @@ def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
             col=1
         )
         # Set Y-axis title for each subplot
-        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1)
+        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1, gridcolor="gray",
+            showgrid=True)
+        
+        fig.update_xaxes(row=i + 1, col=1, gridcolor="gray",
+            showgrid=True)
 
     # Update layout
     fig.update_layout(
         height=300 * N,  # Adjust the height accordingly
         showlegend=True,
-        title=plot_title
+        title=plot_title,
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
     )
     # Set X-axis title only on the bottom subplot
-    fig.update_xaxes(title_text=x_axis_title, row=N, col=1)
+    fig.update_xaxes(title_text=x_axis_title, row=N, col=1, gridcolor="gray",
+            showgrid=True)
 
     # Display the figure
     if save:
@@ -117,7 +132,7 @@ def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
     return fig
 
 
-def plot_3D(position_history, plot_earth=True):
+def plot_3D(position_history, title=None, plot_earth=True):
     # Separate the components into x, y, and z
     x = position_history[:, 0]
     y = position_history[:, 1]
@@ -161,14 +176,33 @@ def plot_3D(position_history, plot_earth=True):
         ))
 
     # Add labels and a title
+    if title is None:
+        title = "3D Visualization of Output"
     fig.update_layout(
         scene=dict(
-            xaxis_title='X',
-            yaxis_title='Y',
-            zaxis_title='Z'
+        xaxis=dict(
+            backgroundcolor="white",
+            title="X (m)",  # Set the x-axis title
+            gridcolor="gray",  # Set grid color to gray
+            showgrid=True      # Ensure the grid is visible
         ),
-        title="3D Visualization of Output with Earth Sphere",
-        margin=dict(l=0, r=0, b=0, t=40)  # Tight layout
+        yaxis=dict(
+            backgroundcolor="white",
+            title="Y (m)",  # Set the y-axis title
+            gridcolor="gray",
+            showgrid=True
+        ),
+        zaxis=dict(
+            backgroundcolor="white",
+            title="Z (m)",  # Set the z-axis title
+            gridcolor="gray",
+            showgrid=True
+        )
+    ),
+        title=title,
+        margin=dict(l=0, r=0, b=0, t=40),  # Tight layout
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
     )
 
     # Show the plot

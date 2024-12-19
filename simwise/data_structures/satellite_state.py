@@ -101,7 +101,8 @@ class SatelliteState:
         # TODO implement enums here and for control mode
         if params.pointing_mode == "SunPointingNadirConstrained":
             self.q_d = compute_sun_pointing_nadir_constrained(self.v_sun_eci, self.r_eci)
-        if params.pointing_mode == "NadirPointingVelocityConstrained":
+            self.w_d = np.zeros(3)
+        elif params.pointing_mode == "NadirPointingVelocityConstrained":
             self.q_d, self.w_d = compute_nadir_pointing_velocity_constrained(self.r_eci, self.v_eci, params.orbit_period)
         else:
             raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")

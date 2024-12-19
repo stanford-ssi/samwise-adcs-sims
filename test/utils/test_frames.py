@@ -72,7 +72,7 @@ def test_display_differences_in_conversion_methods():
     diff_geneci_rotation_only = np.array(diff_geneci_rotation_only)
 
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [geneci]")
-    plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_table, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only with table for nutation/precession]")
+    plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_table, ["x [m]", "y [m]", "z [m]"], "days since J2000", "Error in tabular ECEF to ECI conversion method")
     plot_subplots(np.arange(diff_geneci.shape[0]), diff_geneci_rotation_only, ["x", "y", "z"], "days since J2000", "Difference between ECEF to ECI conversion methods [rotation only]")
 
 def test_ecef_pn_table():

@@ -139,10 +139,12 @@ def run_orbit(params):
     states = []
     times = []
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
-
+    print(num_points_orbit)
+    
     for i in range(num_points_orbit):
-        state.propagate_time(params, params.dt_attitude)
+        state.propagate_time(params, params.dt_orbit)
         state.propagate_orbit(params)
+        state.update_other_orbital_state_representations(params)
         states.append(copy.deepcopy(state))
         times.append(state.t)
 
@@ -193,6 +195,6 @@ def run_dispersions(params, runner=run_one):
     if not os.path.exists(sim_data_dir):
         os.makedirs(sim_data_dir)
     curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    np.save(f"sim_data_dir/states_{curr_time}.npy", np.array(states_from_dispersions))
-    np.save(f"sim_data_dir/times_{curr_time}.npy", np.array(times_from_dispersions))
+    np.save(f"{sim_data_dir}/states_{curr_time}.npy", np.array(states_from_dispersions))
+    np.save(f"{sim_data_dir}/times_{curr_time}.npy", np.array(times_from_dispersions))
     return np.array(states_from_dispersions), np.array(times_from_dispersions)

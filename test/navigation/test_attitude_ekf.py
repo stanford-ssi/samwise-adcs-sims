@@ -97,4 +97,3 @@ def test_ekf():
     print("\nUpdated State:", x_upd)
     print("Updated Covariance:\n", P_upd)
 
-    raise Exception

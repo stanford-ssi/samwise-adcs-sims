@@ -3,10 +3,23 @@ import argparse
 import numpy as np
 
 from simwise.utils.plots import plot_states_plotly, plot_3D, plot_results
+from simwise.math.quaternion import quaternions_to_axis_angle
 
 def plot_all_results(states):
     plot_results(states)
 
+    # Plot error angle vs time
+    fig = plot_states_plotly(
+        states[0],
+        lambda state: state.t,
+        {
+            "error angle [°]": lambda state: np.rad2deg(quaternions_to_axis_angle(state.x_k[:4], state.q)[0])
+        },
+        spacing=0.05,
+        title_text="Error Angle vs Time",
+    )
+    fig.show()
+    
     # Plot mag meas vector
     fig_mag = plot_states_plotly(
         states[0],
