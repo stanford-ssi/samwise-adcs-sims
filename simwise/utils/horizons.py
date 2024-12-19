@@ -79,7 +79,9 @@ def parse_horizons_vector(response_text):
                 time_string = line.split("=")[-1].strip()
                 
                 # Parse the time string to extract date and time
-                parsed_time = datetime.strptime(time_string.split(' ')[1], '%Y-%b-%d %H:%M:%S.%f')
+                print(time_string)
+                print(time_string.split(' ')[1])
+                parsed_time = datetime.strptime(time_string.split(' ')[1], '%Y-%b-%d')
 
                 # Step 2: Approximate TDB to UTC offset
                 tdb_to_utc_offset = timedelta(seconds=constants.TDB_TO_UTC_OFFSET)

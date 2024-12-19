@@ -69,7 +69,7 @@ class Parameters:
             **overrides: Key-value pairs where keys are parameter names and values are Parameter instances.
         """
         # Simulation configuration
-        self.num_dispersions = 20
+        self.num_dispersions = 100
 
         # Time parameters
         self.dt_orbit = 120
@@ -94,7 +94,40 @@ class Parameters:
         self.allocation_mode = "MagicActuators"
 
         # Attitude target
-        self.pointing_mode = "SunPointingNadirConstrained"
+        self.pointing_mode = "NadirPointingVelocityConstrained"
+
+        # Sensors
+        self.magnetic_field_sensor_noise = 15 # 15 nT from RM3100 user manual at 200 counts
+        self.photodiode_noise = 0.02 # 2% error based on 25k measurements (at low angle to sun)
+                                     # TODO add dark current that follows a Poisson distribution
+        self.photodiode_normals = np.array([
+            [1, 0, 0],  # +X
+            [-1, 0, 0], # -X
+            [0, 1, 0],  # +Y
+            [0, -1, 0], # -Y
+            [0, 0, 1],  # +Z
+            [0, 0, -1]  # -Z
+        ])
+
+        # Attitude Determination Method
+        self.attitude_determination_mode = "EKF"
+
+        # EKF parameters
+        # Process noise
+        self.Q = np.diag([
+            1e-3, 1e-3, 1e-3, 1e-3,     # Quaternion
+            1e-3, 1e-3, 1e-3            # Angular velocity
+        ])
+        # Measurement noise
+        self.R = np.diag([
+            2e-2, 2e-2, 2e-2,        # Sun sensor
+            0.01, 0.01, 0.01            # Magnetometer
+        ])
+        # Covariance
+        self.P = np.diag([
+            3e-3, 3e-3, 3e-3, 3e-3,     # Quaternion
+            1e-1, 1e-1, 1e-1            # Angular velocity
+        ])
 
         # Initial orbit properties
         self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)
@@ -103,6 +136,8 @@ class Parameters:
         self.Ω = ScalarParameter(0.1)
         self.ω = ScalarParameter(0.1)
         self.θ = ScalarParameter(0.1)
+        self.orbit_period = 2 * np.pi * np.sqrt(self.a ** 3 / constants.MU_EARTH)
+        self.use_J2 = True
 
         # Attitude initial conditions
         self.q_initial = QuaternionParameter([1, 0, 0, 0]) #variance=(0.05, 0.05, 0.05))
@@ -113,17 +148,18 @@ class Parameters:
         # Satellite Cp and Cg
         self.Cp = ArrayParameter([0, 0, 0])
         self.Cg = ArrayParameter([20 / 4, 10 * np.sqrt(2) / 2, 10 * np.sqrt(2) / 2])
-
-        # Generate ECEF to PN table
-        # This is NOT a regular parameter of the table, and should not be dispersed
-        self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)
-
+        
         # Apply overrides
         self.overrides = overrides
         for key, value in overrides.items():
             if not hasattr(self, key):
                 raise ValueError(f"Unknown parameter '{key}' in overrides.")
             setattr(self, key, value)
+            
+        # Generate ECEF to PN table
+        # This is NOT a regular parameter of the table, and should not be dispersed
+        self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)
+
 
     def generate_dispersions(self, N):
         """
@@ -146,7 +182,6 @@ class Parameters:
                         # No dispersion for parameters without mean and variance
                         dispersed_params[attr] = param
                         continue
-                    print(f"Generating dispersion for {attr}")
                     if isinstance(param, QuaternionParameter):
                         # Generate random Euler angles for quaternion dispersion
                         e_angles = np.random.normal(0, np.sqrt(param.variance), size=3)

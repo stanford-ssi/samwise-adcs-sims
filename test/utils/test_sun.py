@@ -35,6 +35,7 @@ def test_approx_sun_position():
         cached_data = pickle.load(cache)
         if cache_key in cached_data:
             positions, times = cached_data[cache_key]
+            print(times)
             r_sun_approx = np.array([approx_sun_position(time) for time in times])
             
     # plot error

@@ -4,6 +4,7 @@ import random
 import numpy as np
 
 from simwise.data_structures.satellite_state import SatelliteState
+from simwise import constants
 
 
 def random_color() -> str:
@@ -51,10 +52,18 @@ def plot_states_plotly(states: list[SatelliteState],
             go.Scatter(x=x_values, y=y_values, line=dict(color=colors[i])),
             row=i+1, col=1
         )
-        fig.update_yaxes(title_text=y_label, row=i+1, col=1)
-        fig.update_xaxes(title_text=x_label, row=i+1, col=1)
+        fig.update_yaxes(title_text=y_label, row=i+1, col=1, gridcolor="gray",
+            showgrid=True)
+        fig.update_xaxes(title_text=x_label, row=i+1, col=1, gridcolor="gray",
+            showgrid=True)
 
-    fig.update_layout(title=title_text, showlegend=False, height=500 * num_plots)
+    fig.update_layout(
+        title=title_text, 
+        showlegend=False, 
+        height=500 * num_plots,
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
+    )
 
     return fig
 
@@ -96,16 +105,23 @@ def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
             col=1
         )
         # Set Y-axis title for each subplot
-        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1)
+        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1, gridcolor="gray",
+            showgrid=True)
+        
+        fig.update_xaxes(row=i + 1, col=1, gridcolor="gray",
+            showgrid=True)
 
     # Update layout
     fig.update_layout(
         height=300 * N,  # Adjust the height accordingly
         showlegend=True,
-        title=plot_title
+        title=plot_title,
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
     )
     # Set X-axis title only on the bottom subplot
-    fig.update_xaxes(title_text=x_axis_title, row=N, col=1)
+    fig.update_xaxes(title_text=x_axis_title, row=N, col=1, gridcolor="gray",
+            showgrid=True)
 
     # Display the figure
     if save:
@@ -116,44 +132,79 @@ def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
     return fig
 
 
-def plot_3D(position_history):
-
+def plot_3D(position_history, title=None, plot_earth=True):
     # Separate the components into x, y, and z
     x = position_history[:, 0]
     y = position_history[:, 1]
     z = position_history[:, 2]
-    
+
     # Create a 3D scatter plot using Plotly
     fig = go.Figure()
-    
+
     fig.add_trace(go.Scatter3d(
         x=x,
         y=y,
         z=z,
         mode='markers+lines',  # Combines scatter points and lines
         marker=dict(
-            size=5,
-            color=z,  # Optional: Color points based on the z value
-            colorscale='Viridis',  # Color scale
+            size=0.001,
+            color='red',  # Optional: Color points based on the z value
             opacity=0.8
         ),
         line=dict(
-            color='blue',
-            width=2
+            color='red',
+            width=3
         )
     ))
-    
+
+    # Create a sphere to represent Earth
+    if plot_earth:
+        earth_radius = constants.EARTH_RADIUS_M
+        u, v = np.mgrid[0:2 * np.pi:50j, 0:np.pi:25j]
+        sphere_x = earth_radius * np.cos(u) * np.sin(v)
+        sphere_y = earth_radius * np.sin(u) * np.sin(v)
+        sphere_z = earth_radius * np.cos(v)
+
+        # Add the sphere to the plot
+        fig.add_trace(go.Surface(
+            x=sphere_x,
+            y=sphere_y,
+            z=sphere_z,
+            colorscale=[[0, 'lightblue'], [1, 'lightblue']],
+            opacity=0.5,
+            showscale=False
+        ))
+
     # Add labels and a title
+    if title is None:
+        title = "3D Visualization of Output"
     fig.update_layout(
         scene=dict(
-            xaxis_title='X',
-            yaxis_title='Y',
-            zaxis_title='Z'
+        xaxis=dict(
+            backgroundcolor="white",
+            title="X (m)",  # Set the x-axis title
+            gridcolor="gray",  # Set grid color to gray
+            showgrid=True      # Ensure the grid is visible
         ),
-        title="3D Visualization of Output",
-        margin=dict(l=0, r=0, b=0, t=40)  # Tight layout
+        yaxis=dict(
+            backgroundcolor="white",
+            title="Y (m)",  # Set the y-axis title
+            gridcolor="gray",
+            showgrid=True
+        ),
+        zaxis=dict(
+            backgroundcolor="white",
+            title="Z (m)",  # Set the z-axis title
+            gridcolor="gray",
+            showgrid=True
+        )
+    ),
+        title=title,
+        margin=dict(l=0, r=0, b=0, t=40),  # Tight layout
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
     )
-    
+
     # Show the plot
     fig.show()
 
@@ -247,6 +298,29 @@ def plot_results(states_from_dispersions):
                 row=i+1, col=2
             )
             fig.update_yaxes(title_text=name, row=i+1, col=2)
+        
+        attitude_params = [
+            ("q0_d", lambda s: s.q_d[0]),
+            ("q1_d", lambda s: s.q_d[1]),
+            ("q2_d", lambda s: s.q_d[2]),
+            ("q3_d", lambda s: s.q_d[3]),
+            ("wx_d (rad/s)", lambda s: s.w_d[0]),
+            ("wy_d (rad/s)", lambda s: s.w_d[1]),
+            ("wz_d (rad/s)", lambda s: s.w_d[2])
+        ]
+
+        for i, (name, func) in enumerate(attitude_params):
+            values = [func(state) for state in states]
+            fig.add_trace(
+                go.Scatter(
+                    x=times, y=values, name=name,
+                    line=dict(color=random_color),
+                    legendgroup=f"run_{run_index}",  # Group traces under the same legend entry
+                    showlegend=False  # Only the dummy trace shows in the legend
+                ),
+                row=i+1, col=2
+            )
+            fig.update_yaxes(title_text=name, row=i+1, col=2)
 
     # Update layout
     fig.update_layout(
@@ -268,8 +342,12 @@ def plot_results(states_from_dispersions):
             bordercolor="black",
             borderwidth=1
         ),
-        margin=dict(r=200)  # Adjust right margin to accommodate the legend
+        margin=dict(r=200),  # Adjust right margin to accommodate the legend
+        plot_bgcolor="white",  # Background of the plotting area
+        paper_bgcolor="white"  # Background outside the plotting area
     )
+    fig.update_xaxes(gridcolor="lightgray")
+    fig.update_yaxes()
 
     # Add column titles
     fig.add_annotation(
@@ -283,8 +361,10 @@ def plot_results(states_from_dispersions):
 
     # Update x-axes to show time
     for i in range(7):
-        fig.update_xaxes(title_text="Time (s)", row=i+1, col=1, showticklabels=True)
-        fig.update_xaxes(title_text="Time (s)", row=i+1, col=2, showticklabels=True)
+        fig.update_xaxes(title_text="Time (s)", row=i+1, col=1, showticklabels=True, gridcolor="lightgray")
+        fig.update_xaxes(title_text="Time (s)", row=i+1, col=2, showticklabels=True, gridcolor="lightgray")
+        fig.update_yaxes(gridcolor="lightgray", row=i+1, col=1)
+        fig.update_yaxes(gridcolor="lightgray", row=i+1, col=2)
 
     # Adjust subplot titles
     for i, ann in enumerate(fig['layout']['annotations']):

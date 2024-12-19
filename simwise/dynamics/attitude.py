@@ -1,5 +1,5 @@
 import numpy as np
-from simwise.math.quaternion import normalize_quaternion
+from simwise.math.quaternion import normalize_quaternion, regularize_quaternion
 from numba import jit
 
 

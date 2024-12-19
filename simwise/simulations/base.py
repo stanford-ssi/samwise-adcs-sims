@@ -1,4 +1,6 @@
+import os
 import copy
+import datetime
 from multiprocessing import Pool, cpu_count
 
 
@@ -8,6 +10,9 @@ from tqdm import tqdm
 from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
 from simwise.data_structures.satellite_state import SatelliteState, interpolate_state
 from simwise.math.coordinate_transforms import coe_to_mee
+from simwise.navigation.attitude_ekf import ekf_measurement_update, ekf_time_update
+from simwise.navigation.triad import triad
+from simwise.math.quaternion import error_quaternion, regularize_quaternion, dcm_to_quaternion
 
 def init_state(params):
     state = SatelliteState()
@@ -22,13 +27,23 @@ def init_state(params):
     # Initial time conditions
     state.jd = params.epoch_jd
 
+    state.update_other_orbital_state_representations(params)
+    state.update_environment(params)
+
+    # Target attitude
+    state.compute_target_attitude(params)
+
     # Initial attitude conditions
-    state.q = params.q_initial
-    state.w = params.w_initial
-    state.q_d = params.q_desired
-    state.w_d = params.w_desired
+    state.q = state.q_d
+    state.w = state.w_d
     state.control_mode = params.control_mode
     state.allocation_mode = params.allocation_mode
+
+    # Initial filter conditions
+    state.x_k = np.hstack((state.q, state.w))
+    state.P_k = params.P
+    state.Q = params.Q
+    state.R = params.R    
 
     return state
 
@@ -36,20 +51,14 @@ def run_one(params):
     """This is the main function that runs the sim for a single set of params
     """
     state = init_state(params)
+    infrequent_state_next = copy.deepcopy(state)
 
     states = []
     times = []
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
-    
-    # Initialize the state of the orbit
-    # TODO make an initialization function
-    state.update_other_orbital_state_representations(params)
-    state.update_environment(params)
-    infrequent_state_next = copy.deepcopy(state)
 
     for i in range(num_points_attitude):
-        
         # Propagate orbit for greater time step - orbit
         if i % int(params.dt_orbit / params.dt_attitude) == 0:
             # Save the current state for linear interpolation in the future
@@ -57,9 +66,9 @@ def run_one(params):
             # TODO organize this
             state.orbit_mee = infrequent_state_prev.orbit_mee
             state.orbit_keplerian = infrequent_state_prev.orbit_keplerian
-            state.magnetic_field = infrequent_state_prev.magnetic_field
+            state.v_mag_eci = infrequent_state_prev.v_mag_eci
             state.atmospheric_density = infrequent_state_prev.atmospheric_density
-            state.r_sun_eci = infrequent_state_prev.r_sun_eci
+            state.v_sun_eci = infrequent_state_prev.v_sun_eci
 
             # Propagate orbit for greater time step - orbit
             infrequent_state_next.propagate_orbit(params)
@@ -72,9 +81,9 @@ def run_one(params):
             state.orbit_mee = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_mee")
             state.orbit_keplerian = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_keplerian")
             state.orbit_keplerian[5] = state.orbit_keplerian[5] % (2 * np.pi)
-            state.magnetic_field = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="magnetic_field")
+            state.v_mag_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="v_mag_eci")
             state.atmospheric_density = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="atmospheric_density")
-            state.r_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="r_sun_eci")   
+            state.v_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="v_sun_eci")   
     
         # Update other state representations
         state.update_other_orbital_state_representations(params)
@@ -89,13 +98,33 @@ def run_one(params):
         state.allocate_control_torque(params)
 
         # Propagate attitude at every step - smaller timestep
+        state.torque_applied = state.control_torque + np.random.normal(0, params.noise_torque, 3)
         state.propagate_attitude(params)
         
         # Update forces
         state.update_forces(params)
 
+        # Perform attitude determination
+        if params.attitude_determination_mode == "EKF":
+            state.x_k_minus, state.P_k_minus = ekf_time_update(state.x_k, state.P_k, state.Q, params.dt_attitude, params.inertia, state.control_torque)
+            # state.x_k = state.x_k_minus
+            # state.P_k = state.P_k_minus
+
+            state.update_measurements(params)
+            state.v_sun_eci = state.v_sun_eci / np.linalg.norm(state.v_sun_eci)
+            state.x_k, state.P_k = ekf_measurement_update(state.x_k_minus, state.P_k_minus, state.R, state.v_sun_meas, state.v_mag_meas, state.v_sun_eci, state.v_mag_eci)
+            state.x_k[:4] = regularize_quaternion(state.x_k[:4])
+        elif params.attitude_determination_mode == "TRIAD":
+            state.update_measurements(params)
+            R = triad(state.v_sun_eci, state.v_mag_eci, state.v_sun_meas, state.v_mag_meas)
+            state.x_k[:4] = dcm_to_quaternion(R)
+        else:
+            raise ValueError("Invalid attitude determination mode")
+
         # Define time in terms of smaller timestep - attitude
         state.propagate_time(params, params.dt_attitude)
+
+        state.attitude_knowedge_error = regularize_quaternion(error_quaternion(state.x_k[:4], state.q))
 
         states.append(copy.deepcopy(state))
         times.append(state.t)
@@ -110,10 +139,12 @@ def run_orbit(params):
     states = []
     times = []
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
-
+    print(num_points_orbit)
+    
     for i in range(num_points_orbit):
-        state.propagate_time(params, params.dt_attitude)
+        state.propagate_time(params, params.dt_orbit)
         state.propagate_orbit(params)
+        state.update_other_orbital_state_representations(params)
         states.append(copy.deepcopy(state))
         times.append(state.t)
 
@@ -160,4 +191,10 @@ def run_dispersions(params, runner=run_one):
                 times_from_dispersions.append(times)
                 pbar.update()
     
+    sim_data_dir = "data"
+    if not os.path.exists(sim_data_dir):
+        os.makedirs(sim_data_dir)
+    curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    np.save(f"{sim_data_dir}/states_{curr_time}.npy", np.array(states_from_dispersions))
+    np.save(f"{sim_data_dir}/times_{curr_time}.npy", np.array(times_from_dispersions))
     return np.array(states_from_dispersions), np.array(times_from_dispersions)

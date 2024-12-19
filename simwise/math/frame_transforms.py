@@ -36,7 +36,7 @@ def generate_ecef_pn_table(epoch_jd, t_end_seconds):
 
     # nearest 10 days after end of sim
     end = int((epoch_jd + duration_days) // 10 * 10 + 10)
-
+    print(start, end)
     for i, jd_waypoint in enumerate(range(start, end, 10)):
         pn_matrix = precession_nutation_matrix(jd_waypoint)
         year_pn_table[jd_waypoint] = pn_matrix
