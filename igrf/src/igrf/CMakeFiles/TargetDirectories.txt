@@ -1,0 +1,4 @@
+C:/Users/tycho/Desktop/SSI ADCS/samwise-adcs-sims/igrf/src/igrf/CMakeFiles/igrf13_driver.dir
+C:/Users/tycho/Desktop/SSI ADCS/samwise-adcs-sims/igrf/src/igrf/CMakeFiles/test.dir
+C:/Users/tycho/Desktop/SSI ADCS/samwise-adcs-sims/igrf/src/igrf/CMakeFiles/edit_cache.dir
+C:/Users/tycho/Desktop/SSI ADCS/samwise-adcs-sims/igrf/src/igrf/CMakeFiles/rebuild_cache.dir

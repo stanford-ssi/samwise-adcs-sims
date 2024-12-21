@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\igrf13_driver.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\igrf13_driver.dir/objects.a @CMakeFiles\igrf13_driver.dir\objects1.rsp
+C:\MinGW\bin\gfortran.exe -O3 -Wl,--whole-archive CMakeFiles\igrf13_driver.dir/objects.a -Wl,--no-whole-archive -o igrf13_driver.exe -Wl,--out-implib,libigrf13_driver.dll.a -Wl,--major-image-version,0,--minor-image-version,0

@@ -6,7 +6,7 @@ import copy
 from simwise.data_structures.parameters import Parameters
 from simwise.data_structures.satellite_state import SatelliteState
 from simwise.utils.plots import plot_states_plotly
-from simwise.orbit.equinoctial import *
+#from simwise.orbit.equinoctial import *
 
 
 def magnetic_field(t):

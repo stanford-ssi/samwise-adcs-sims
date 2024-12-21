@@ -27,6 +27,7 @@ from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
 class SatelliteState:
     # Time
     t: float = 0  # [sec]
+    jd: float = 0 
 
     # Attitude
     q: np.ndarray
