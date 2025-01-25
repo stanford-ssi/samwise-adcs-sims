@@ -25,7 +25,8 @@ dependencies = [
     "scipy>=1.7.0",
     "plotly>=5.0.0",
     "tqdm",
-    "numba"
+    "numba",
+    "ppigrf",
 ]
 
 [project.optional-dependencies]
