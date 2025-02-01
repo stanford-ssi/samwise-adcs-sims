@@ -137,7 +137,18 @@ def quaternions_to_axis_angle(q1, q2):
 def rotate_vector_by_quaternion(v: np.ndarray, q: np.ndarray) -> np.ndarray:
     """
     Rotate a vector from inertial to body frame using quaternion.
+    
+    Args:
+        v (np.ndarray): Vector to rotate (3D vector)
+        q (np.ndarray): Rotation quaternion [w, x, y, z]
+        
+    Returns:
+        np.ndarray: Rotated vector
     """
+    # Handle zero vector case explicitly
+    if np.allclose(v, np.zeros_like(v), atol=1e-15):
+        return np.zeros_like(v)
+        
     q = normalize_quaternion(q)
     v_quat = np.array([0, v[0], v[1], v[2]])
     q_conj = quaternion_inverse(q)
