@@ -54,7 +54,8 @@ def get_position_from_horizons(params):
                 else:
                     raise Exception(f"Failed to get data: {response.status}")
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     task = loop.create_task(call_api(url, params))
     loop.run_until_complete(task)
 
@@ -79,7 +80,7 @@ def parse_horizons_vector(response_text):
                 time_string = line.split("=")[-1].strip()
                 
                 # Parse the time string to extract date and time
-                parsed_time = datetime.strptime(time_string.split(' ')[1], '%Y-%b-%d %H:%M:%S.%f')
+                parsed_time = datetime.strptime(time_string.replace('A.D. ', ''), '%Y-%b-%d %H:%M:%S.%f TDB')
 
                 # Step 2: Approximate TDB to UTC offset
                 tdb_to_utc_offset = timedelta(seconds=constants.TDB_TO_UTC_OFFSET)
