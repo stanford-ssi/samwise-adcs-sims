@@ -262,7 +262,7 @@ def compute_celestial_positions(
     omega = moon_ascension(julian_century) * ARC_SECONDS_TO_RADIANS
     D =  moon_elongation(julian_century) * ARC_SECONDS_TO_RADIANS
     F = moon_longitude(julian_century) * ARC_SECONDS_TO_RADIANS
-    l_prime = sun_anomoly(julian_century) * ARC_SECONDS_TO_RADIANS
+    l_prime = sun_anomaly(julian_century) * ARC_SECONDS_TO_RADIANS
 
     # Precompute reoccuring argument
     f_omega_d = 2 * (F + omega - D)
@@ -300,12 +300,12 @@ precession_y = np.polynomial.polynomial.Polynomial(
 # Equation 5.43
 
 # Mean_anomaly of the moon (l)
-moon_anomoly = np.polynomial.polynomial.Polynomial(
+moon_anomaly = np.polynomial.polynomial.Polynomial(
     [485868.249036, 1717915923.217800, 31.879200, 0.05163500]
 )
 
 # Mean_anomaly of the sun (l-prime)
-sun_anomoly = np.polynomial.polynomial.Polynomial(
+sun_anomaly = np.polynomial.polynomial.Polynomial(
     [1287104.793048, 129596581.048100, -0.55320]
 )
 
