@@ -1,3 +1,5 @@
+import numpy as np
+
 # NEEDS REFACTORING
 def evaluate_performance(omegas: np.ndarray, magnetic_moments: np.ndarray, 
                     settling_threshold: float = 0.01) -> tuple:
