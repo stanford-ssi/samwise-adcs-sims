@@ -17,6 +17,7 @@ def test_quaternions():
 def test_vectors():
     """Common test vectors"""
     return {
+        '0': np.array([0, 0, 0]),
         'x': np.array([1.0, 0.0, 0.0]),
         'y': np.array([0.0, 1.0, 0.0]),
         'z': np.array([0.0, 0.0, 1.0]),
