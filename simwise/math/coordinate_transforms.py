@@ -5,24 +5,60 @@ def ECEF_to_topocentric(r, ε = 1e-11):
     """Convert state vector to latitude, longitude, and altitude.
 
     Args:
-        rv (_type_): _description_
+        r (np.ndarray): ECEF position vector [x, y, z] in meters
+        ε (float): Convergence tolerance for iterative latitude calculation
+
+    Raises:
+        ValueError: If input vector is zero, wrong size, or point is below Earth's surface
     """
-    # WGS84 constants
+    
+    # ::::: INPUT CHECKS :::::
+    # Input validation
+    if not isinstance(r, np.ndarray) or r.size != 3:
+        raise ValueError("Input must be a 3D numpy array")
+        
+    if np.all(r == 0):
+        raise ValueError("Input vector cannot be zero")
+    
+    # Check if point is below Earth's surface
+    # Use WGS84 constants
     e_elipsiod = 0.08182
-    r_e = 6378137.0 # Semi-major axis (meters)
+    r_e = 6378137.0  # Semi-major axis (meters)
+    b = r_e * np.sqrt(1 - e_elipsiod**2)  # Semi-minor axis
+    
+    # Point coordinates
+    x, y, z = r[0], r[1], r[2]
+    
+    # Check against ellipsoid equation (x²/a² + y²/a² + z²/b² = 1)
+    # If result > 1, point is outside ellipsoid
+    # If result < 1, point is inside ellipsoid
+    ellipsoid_test = (x**2 + y**2)/(r_e**2) + z**2/b**2
+    if ellipsoid_test < 1:
+        raise ValueError("Point is below Earth's surface")
+    
+    
+    # ::::: CALCULATIONS :::::
     # calculate longitude
+    # Note that this can be calculated directly from from trig
+    #   because longitude does not depend on Earth's oblateness
     λ = np.arctan2(r[1], r[0])
-    # calculate initial guess of latitude based on circular earth
-    ϕ_prev = np.arctan2(r[2], np.linalg.norm([r[0], r[1]]))
-    N = r_e/(1 - (e_elipsiod**2 * np.sin(ϕ_prev)**2))**0.5
+    
+    # calculate initial guess of latitude based on spherical earth
+    ϕ_prev = np.arctan2(r[2], np.linalg.norm([r[0], r[1]])) # initial guess of latitude
+    N = r_e/(1 - (e_elipsiod**2 * np.sin(ϕ_prev)**2))**0.5 # radius of curvature in the prime vertical
     ϕ = np.arctan2((r[2] + N * e_elipsiod**2 * np.sin(ϕ_prev)), np.linalg.norm([r[0], r[1]]))
+    
+    # Iterate until convergence to consider an ellipsoidal earth
+    #   We iterate until the change in latitude is less than ε (threshold)
     while (abs(ϕ_prev - ϕ) > ε):
         ϕ_prev = ϕ
         N = r_e/(1 - (e_elipsiod**2 * np.sin(ϕ_prev)**2))**0.5
         ϕ = np.arctan2((r[2] + N * e_elipsiod**2 * np.sin(ϕ_prev)), np.linalg.norm([r[0], r[1]]))
     
     # use converged on ϕ to find height
-    h = ((np.linalg.norm([r[0], r[1]])/np.cos(ϕ))-N)
+    #h = ((np.linalg.norm([r[0], r[1]])/np.cos(ϕ))-N)
+    #h = (np.linalg.norm(r)-N)
+    h = np.linalg.norm(r) - N*(1 - e_elipsiod**2*np.sin(ϕ)**2)**0.5
     return (np.rad2deg(ϕ),np.rad2deg(λ),h)
 
 

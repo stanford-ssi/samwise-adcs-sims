@@ -18,7 +18,7 @@ pip3 install -e .
 * `data_structures`: Classes for holding and modeling data
 * `math`: Purely math utils (e.g. quaternion functions)
 * `utils`: General utilities (plotting, etc)
-* `simulations`: Runnable code goes here - **each file must define a `run` method!**
+* `simulations`: Runnable code goes here - **each file must define a `run` method!** 
 
 ## Running the Code
 To run the code, type:
