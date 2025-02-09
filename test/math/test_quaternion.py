@@ -7,10 +7,15 @@ def test_quaternions():
     """Common test quaternions"""
     return {
         'identity': np.array([1.0, 0.0, 0.0, 0.0]),
+        'negative': np.array([-1.0, 0.0, 0.0, 0.0]),
         'x90': np.array([np.cos(np.pi/4), np.sin(np.pi/4), 0.0, 0.0]),  # 90° around x
         'y90': np.array([np.cos(np.pi/4), 0.0, np.sin(np.pi/4), 0.0]),  # 90° around y
         'z90': np.array([np.cos(np.pi/4), 0.0, 0.0, np.sin(np.pi/4)]),  # 90° around z
-        'arbitrary': np.array([0.5, 0.5, 0.5, 0.5]) / np.sqrt(1.0)  # Arbitrary normalized
+        'x180': np.array([np.cos(np.pi/2), 0.0, 0.0, np.sin(np.pi/2)]),  # 180° around z
+        'y180': np.array([np.cos(np.pi/2), 0.0, 0.0, np.sin(np.pi/2)]),  # 180° around z
+        'z180': np.array([np.cos(np.pi/2), 0.0, 0.0, np.sin(np.pi/2)]),  # 180° around z
+        'arbitrary': np.array([0.5, 0.5, 0.5, 0.5]) / np.sqrt(1.0),  # Arbitrary normalized
+        'zero': np.array([0.0, 0.0, 0.0, 0.0])  # Zero quaternion (invalid)
     }
 
 @pytest.fixture
@@ -57,10 +62,60 @@ def test_quaternion_multiply(test_quaternions):
 def test_quaternion_inverse(test_quaternions):
     """Test quaternion inverse"""
     for name, q in test_quaternions.items():
+        if name == 'zero':
+            # Skip zero quaternion for inverse test
+            continue
         # q * q^-1 should equal identity
         q_inv = quaternion_inverse(q)
         result = quaternion_multiply(q, q_inv)
         np.testing.assert_allclose(result, test_quaternions['identity'], rtol=1e-10)
+
+def test_rotate_vector(test_quaternions, test_vectors):
+    """Test vector rotation by quaternion"""
+    # 90° rotation around z should take x to y
+    rotated = rotate_vector_by_quaternion(
+        test_vectors['x'], 
+        test_quaternions['z90']
+    )
+    np.testing.assert_allclose(rotated, test_vectors['y'], rtol=1e-10, atol=1e-15)
+    
+    # Any rotation of zero vector should be zero
+    zero = np.zeros(3)
+    for name, q in test_quaternions.items():
+        if name == 'zero':
+            # Skip zero quaternion
+            continue
+        rotated = rotate_vector_by_quaternion(zero, q)
+        np.testing.assert_allclose(rotated, zero, rtol=1e-10, atol=1e-15)
+        
+    # Test that magnitude is preserved
+    v = test_vectors['arbitrary']
+    for name, q in test_quaternions.items():
+        if name == 'zero':
+            # Skip zero quaternion
+            continue
+        rotated = rotate_vector_by_quaternion(v, q)
+        np.testing.assert_allclose(np.linalg.norm(rotated), np.linalg.norm(v), rtol=1e-10)
+
+def test_zero_quaternion(test_quaternions):
+    """Test handling of zero quaternion"""
+    zero_q = test_quaternions['zero']
+    
+    # Test normalization of zero quaternion
+    with pytest.raises(ValueError, match="Cannot normalize zero quaternion"):
+        normalize_quaternion(zero_q)
+    
+    # Test multiplication with zero quaternion should return zero
+    result = quaternion_multiply(zero_q, test_quaternions['identity'])
+    np.testing.assert_allclose(result, zero_q, rtol=1e-10)
+    
+    # Test inverse of zero quaternion
+    with pytest.raises(ValueError, match="Cannot compute inverse of zero quaternion"):
+        quaternion_inverse(zero_q)
+    
+    # Test rotation by zero quaternion
+    with pytest.raises(ValueError, match="Cannot rotate with zero quaternion"):
+        rotate_vector_by_quaternion(test_vectors['x'], zero_q)
 
 def test_euler_quaternion_roundtrip():
     """Test euler to quaternion and back"""
@@ -84,34 +139,12 @@ def test_euler_quaternion_roundtrip():
         
         np.testing.assert_allclose(angles_wrapped, euler_back_wrapped, rtol=1e-10)
 
-def test_rotate_vector(test_quaternions, test_vectors):
-    """Test vector rotation by quaternion"""
-    # 90° rotation around z should take x to y
-    rotated = rotate_vector_by_quaternion(
-        test_vectors['x'], 
-        test_quaternions['z90']
-    )
-    # Add absolute tolerance for near-zero comparisons
-    np.testing.assert_allclose(rotated, test_vectors['y'], rtol=1e-10, atol=1e-15)
-    
-    # Any rotation of zero vector should be zero
-    zero = np.zeros(3)
-    for q in test_quaternions.values():
-        rotated = rotate_vector_by_quaternion(zero, q)
-        np.testing.assert_allclose(rotated, zero, rtol=1e-10, atol=1e-15)
-        
-    # Test that magnitude is preserved
-    v = test_vectors['arbitrary']
-    for q in test_quaternions.values():
-        rotated = rotate_vector_by_quaternion(v, q)
-        np.testing.assert_allclose(np.linalg.norm(rotated), np.linalg.norm(v), rtol=1e-10)
-
 def test_quaternions_to_axis_angle(test_quaternions):
     """Test quaternion to axis-angle conversion"""
     # Identity rotation should give zero angle
     theta, axis = quaternions_to_axis_angle(
         test_quaternions['identity'],
-        test_quaternions['identity']
+        test_quaternions['identity'], 
     )
     assert np.abs(theta) < 1e-10
     np.testing.assert_allclose(axis, np.zeros(3), atol=1e-15)
@@ -153,3 +186,19 @@ def test_special_cases():
     # Allow for wrapping
     diff = np.min([np.abs(angles_back - near_pi), np.abs(angles_back + near_pi)], axis=0)
     assert np.all(diff < 1e-5)
+
+def test_zero_quaternion(test_quaternions):
+    """Test handling of zero quaternion"""
+    zero_q = test_quaternions['zero']
+    
+    # Test normalization of zero quaternion
+    with pytest.raises(ValueError):  # or whatever exception your normalize function raises
+        normalize_quaternion(zero_q)
+    
+    # Test multiplication with zero quaternion
+    result = quaternion_multiply(zero_q, test_quaternions['identity'])
+    np.testing.assert_allclose(result, zero_q, rtol=1e-10)
+    
+    # Test inverse of zero quaternion
+    with pytest.raises(ValueError):  # or whatever exception your inverse function raises
+        quaternion_inverse(zero_q)

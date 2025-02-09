@@ -29,11 +29,6 @@ i.e. to run the integrated sim, run the following command in the root directory:
 ```
 python -m simwise.main --run nadir_pointing
 ```
-*INSTALL MAGNETIC FIELD MODEL*
-```
-cd igrf
-python -m pip install -e .
-```
 
 e.g. `python3 simwise/main.py --run simulate_attitude`
 

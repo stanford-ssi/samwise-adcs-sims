@@ -8,9 +8,18 @@ def normalize_quaternion(q):
     Args:
         q (np.ndarray): quaternion of form [q1, q2, q3, q4]
     """
-    q_normalized =  q / np.linalg.norm(q)
-    # print(q_normalized, -q_normalized if q_normalized[0] < 0 else q_normalized)
-    #  if q_normalized[0] < 0: q_normalized *= -1
+
+    # Check for zero quaternion (can't normalize)
+    if np.allclose(q, np.zeros(4)):
+        raise ValueError("Cannot normalize zero quaternion")
+    
+    # Normalize the quaternion
+    q_normalized = q / np.linalg.norm(q)
+    
+    # Make scalar component positive if needed
+    if q_normalized[0] < 0:
+        q_normalized *= -1
+
     return q_normalized
 
 
@@ -119,13 +128,13 @@ def quaternions_to_axis_angle(q1, q2):
     theta = 2 * np.arccos(q_1_to_2[0])
 
     # Wrap to be between 0 and pi
-    if theta > np.pi:
-        theta = theta - 2 * np.pi
+    # if theta > np.pi:
+    #     theta = theta - 2 * np.pi
 
     if np.abs(theta) < 0.00001:
         return theta, np.zeros(3)
     
-    rotation_vector = q_1_to_2[1:] / np.sin(theta / 2)
+    rotation_vector = q_1_to_2[1:] / np.linalg.norm(q_1_to_2[1:])
 
     # TODO - not sure if this works!
     # if np.abs(theta - np.pi) < 0.1:
@@ -180,3 +189,40 @@ def dcm_to_quaternion(dcm):
     np.array([q0, q1, q2, q3])
     q = normalize_quaternion(np.array([q0, q1, q2, q3]))
     return q
+
+def quaternion_to_dcm(q):
+    """
+    Convert a quaternion to a direction cosine matrix (dcm)
+
+    Parameters:
+    np.ndarray: The quaternion representation of the DCM
+
+    Returns:
+    dcm (np.ndarray): A 3x3 direction cosine matrix.
+    """
+    # First normalize quaternion
+    q = normalize_quaternion(q)
+
+    # Extract components
+    w, x, y, z = q
+    
+    # Compute common terms to avoid repetition
+    w2 = w * w
+    x2 = x * x
+    y2 = y * y
+    z2 = z * z
+    wx = w * x
+    wy = w * y
+    wz = w * z
+    xy = x * y
+    xz = x * z
+    yz = y * z
+
+    # Create the DCM rotation matrix
+    dcm = np.array([
+        [1 - 2*(y2 + z2),     2*(xy - wz),     2*(xz + wy)],
+        [    2*(xy + wz), 1 - 2*(x2 + z2),     2*(yz - wx)],
+        [    2*(xz - wy),     2*(yz + wx), 1 - 2*(x2 + y2)]
+    ])
+
+    return dcm
