@@ -3,16 +3,15 @@ from simwise.forces.area_projection import create_rotation_matrix, define_satell
 from simwise.constants import *
 from simwise.world_model.atmosphere import *
 
-# DRAG CALCULATION:
 
-def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
+def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density):
     """
     Calculate the drag perturbation torque on the satellite.
 
     Args:
         params (Parameters): The parameters object containing satellite properties.
         e_angles (np.ndarray): Euler angles [psi, theta, phi], shape (3,)
-        velocity (np.ndarray): Satellite velocity vector in body frame, shape (3,)
+        velocity (np.ndarray): Satellite orbital velocity vector in body frame, shape (3,)
         altitude (float): altitude of satellite
 
     Returns:
@@ -36,9 +35,11 @@ def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
     # Calculate projected area
     projected_area = calculate_projected_area(projected_vertices)
     
+    # Calculate velocity relative to air
+    relative_velocity = find_relative_air_velocity(r_vec, velocity)
+
     # Calculate drag force magnitude
-    # TODO: calculate relative velocity (based on earth rotation)
-    v_mag = np.linalg.norm(velocity)
+    v_mag = np.linalg.norm(relative_velocity)
     drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * drag_coefficient()
     
     # Calculate drag force vector (opposite to velocity direction)
@@ -49,6 +50,47 @@ def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
     torque = np.cross(r, drag_force.flatten())
     
     return torque
+
+def find_air_velocity(r_eci):
+    """
+    Calculate the relative velocity of the satellite to the air molecules,
+    assuming that the air molecules move with the angular velocity of Earth.
+
+    Parameters:
+    r_eci: current orbital position of satellite in ECI frame (km)
+
+    Return: 
+    v_wind: Velocity of air particles at this position in ECI frame (m/s), assuming they move with same angular velocity as Earth (first approximation)
+    """
+    # Define rotational velocity vector (rad/s)
+    w = 2*np.pi/SECONDS_PER_DAY
+    w_vec = np.ndarray([0, 0, w])
+
+    # v = w x r
+    v_wind = np.cross(w_vec, r_eci*1000)
+
+    return v_wind
+
+def find_relative_air_velocity(r_eci, v):
+    """
+    Calculate the relative velocity of the satellite to the air molecules,
+    assuming that the air molecules move with the angular velocity of Earth.
+
+    Parameters:
+    r_eci: current orbital position of satellite in ECI frame (km)
+    v: current orbital velocity in ECI frame (m/s)
+
+    Return: 
+    v_rel: relative velocity between satellite and air particles (m/s)
+    """
+    # Get air velocity in km/s
+    v_wind = find_air_velocity(r_eci)  # changed to match our previous function name
+    
+    # Calculate relative velocity (v_satellite - v_air)
+    v_rel = np.array(v) - v_wind
+    
+    return v_rel
+
 
 def drag_coefficient():
     Cd = 2.0
