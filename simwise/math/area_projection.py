@@ -8,10 +8,26 @@ from mpl_toolkits.mplot3d import art3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Polygon
 
+'''
+This script is used to calculate the projected area of a satellite in a given direction.
 
-# AREA PROJECTION CALCULATION:
-    
+The script defines the vertices of a satellite and rotates them around the x, y, and z axes.
+
+The script then projects the vertices onto the yz plane and calculates the area of the polygon formed by the projected vertices.
+
+'''
+
+
+# Creating Rotation Matrix
 def create_rotation_matrix(psi, theta, phi):
+    '''
+    Creates a rotation matrix for a given set of Euler angles.
+    
+    Args:
+        psi (float): The first Euler angle (yaw)
+        theta (float): The second Euler angle (pitch)
+        phi (float): The third Euler angle (roll)
+    '''
     Rz = np.array([
         [np.cos(psi), -np.sin(psi), 0],
         [np.sin(psi), np.cos(psi), 0],
@@ -72,6 +88,14 @@ def define_satellite_vertices(params):
     
     
 def project_prism(vertices, psi, theta, phi):
+    '''
+    Projects the vertices of a prism onto the yz plane.
+    
+    Args:
+        vertices (np.ndarray): The vertices of the prism.
+        psi (float): The yaw angle.
+    '''
+    
     R = create_rotation_matrix(psi, theta, phi)
     rotated_vertices = np.dot(vertices, R.T)
     projected_vertices = rotated_vertices[:, 1:]  # y and z axes
@@ -250,121 +274,3 @@ def plot_rotation_and_projection(original_vertices, rotated_vertices, projected_
     plt.show()
 
 
-def test_projected_area_simple_cube():
-    test_cases = [
-        {
-            "name": "Unrotated shape",
-            "psi": 0, "theta": 0, "phi": 0,
-            "expected_area": 1.0  # Adjust this based on your initial shape
-        },
-        {
-            "name": "45-degree rotation around z-axis",
-            "psi": np.pi/4, "theta": 0, "phi": 0,
-            "expected_area": 1.0  # Adjust this based on your shape
-        },
-        {
-            "name": "90-degree rotation around y-axis",
-            "psi": 0, "theta": np.pi/2, "phi": 0,
-            "expected_area": 1.0  # Adjust this based on your shape
-        },
-        {
-            "name": "45-degree rotation around x-axis",
-            "psi": 0, "theta": 0, "phi": np.pi/4,
-            "expected_area": 1.0  # Adjust this based on your shape
-        },
-        {
-            "name": "Complex rotation",
-            "psi": np.pi/6, "theta": np.pi/4, "phi": np.pi/3,
-            "expected_area": 1.0  # Adjust this based on your shape
-        }
-    ]
-
-    params = Parameters()  # Create a Parameters instance
-
-    for case in test_cases:
-        # Get the original vertices of your shape
-        original_vertices = define_satellite_vertices_simple(params)
-
-        # Rotate and project the vertices
-        rotated_vertices, projected_vertices = project_prism(original_vertices, case["psi"], case["theta"], case["phi"])
-        
-        print(f"\nTest Case: {case['name']}")
-        print(f"Rotation angles: psi={case['psi']:.2f}, theta={case['theta']:.2f}, phi={case['phi']:.2f}")
-        print(f"Original vertices:\n{original_vertices}")
-        print(f"Rotated vertices:\n{rotated_vertices}")
-        print(f"Projected vertices:\n{projected_vertices}")
-        
-        calculated_area = calculate_projected_area(projected_vertices)
-        
-        print(f"Expected area: {case['expected_area']:.6f}")
-        print(f"Calculated area: {calculated_area:.6f}")
-        
-        # Check if areas match
-        area_match = np.isclose(case['expected_area'], calculated_area, rtol=1e-5)
-        
-        print(f"Area match: {area_match}")
-        
-        # Create 3D plot for this test case
-        plot_rotation_and_projection_cube(original_vertices, rotated_vertices, projected_vertices, f"Rotation: {case['name']}")
-
-def test_projected_area():
-    test_cases = [
-        {
-            "name": "Unrotated shape",
-            "psi": 0, "theta": 0, "phi": 0,
-        },
-        {
-            "name": "45-degree rotation around z-axis",
-            "psi": np.pi/4, "theta": 0, "phi": 0,
-        },
-        {
-            "name": "90-degree rotation around y-axis",
-            "psi": 0, "theta": np.pi/2, "phi": 0,
-        },
-        {
-            "name": "45-degree rotation around x-axis",
-            "psi": 0, "theta": 0, "phi": np.pi/4,
-        },
-        {
-            "name": "Complex rotation",
-            "psi": np.pi/6, "theta": np.pi/4, "phi": np.pi/3,
-        }
-    ]
-
-    params = Parameters()  # Create a Parameters instance
-
-    # Calculate the reference area (projected area of unrotated shape)
-    original_vertices = define_satellite_vertices(params)
-    _, reference_projection = project_prism(original_vertices, 0, 0, 0)
-    reference_area = calculate_projected_area(reference_projection)
-
-    for case in test_cases:
-        # Get the original vertices of your shape
-        original_vertices = define_satellite_vertices(params)
-
-        # Rotate and project the vertices
-        rotated_vertices, projected_vertices = project_prism(original_vertices, case["psi"], case["theta"], case["phi"])
-        
-        print(f"\nTest Case: {case['name']}")
-        print(f"Rotation angles: psi={case['psi']:.2f}, theta={case['theta']:.2f}, phi={case['phi']:.2f}")
-        
-        calculated_area = calculate_projected_area(projected_vertices)
-        
-        print(f"Reference area: {reference_area:.6f}")
-        print(f"Calculated area: {calculated_area:.6f}")
-        print(f"Area ratio (calculated/reference): {calculated_area/reference_area:.6f}")
-        
-        # Create 3D plot for this test case
-        plot_rotation_and_projection(original_vertices, rotated_vertices, projected_vertices, f"Rotation: {case['name']}")
-
-
-
-
-if __name__ == "__main__":
-    # Run test cases
-     
-    # Uncomment below line to do tests on simple cube rotation:
-    test_projected_area_simple_cube() 
-    
-    # Run test cases for complex satellite shape
-    # test_projected_area()

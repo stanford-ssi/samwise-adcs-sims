@@ -1,5 +1,5 @@
 import numpy as np 
-from simwise.forces.area_projection import create_rotation_matrix, define_satellite_vertices, project_prism, calculate_projected_area
+from simwise.math.area_projection import create_rotation_matrix, define_satellite_vertices, project_prism, calculate_projected_area
 from simwise.constants import *
 from simwise.world_model.atmosphere import *
 

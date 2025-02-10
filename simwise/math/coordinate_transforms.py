@@ -63,6 +63,35 @@ def ECEF_to_topocentric(r, ε = 1e-11):
 
 
 def mee_to_rv(mee, µ):
+    """Convert Modified Equinoctial Elements (MEE) to position and velocity vectors (RV).
+    
+    Modified Equinoctial Elements are an alternative to classical orbital elements that avoid
+    singularities for zero eccentricity and inclinations of 0° and 180°.
+    
+    Args:
+        mee (np.ndarray): Modified Equinoctial Elements [p, f, g, h, k, L] where:
+            p: semi-parameter (km)
+            f: equinoctial element related to eccentricity (f = e*cos(ω + Ω))
+            g: equinoctial element related to eccentricity (g = e*sin(ω + Ω))
+            h: equinoctial element related to inclination (h = tan(i/2)*cos(Ω))
+            k: equinoctial element related to inclination (k = tan(i/2)*sin(Ω))
+            L: true longitude (L = Ω + ω + ν)
+        µ (float): Gravitational parameter of central body (km³/s²)
+    
+    Returns:
+        np.ndarray: State vector [rx, ry, rz, vx, vy, vz] where:
+            rx, ry, rz: position components (km)
+            vx, vy, vz: velocity components (km/s)
+    
+    Notes:
+        - MEE are particularly useful for numerical integration of orbital motion
+        - The elements f and g encode both eccentricity and orientation of the ellipse
+        - The elements h and k encode both inclination and node orientation
+        - For circular orbits, f = g = 0
+        - For equatorial orbits, h = k = 0
+    """
+    
+    
     p = mee[0]
     f = mee[1]
     g = mee[2]
@@ -159,6 +188,7 @@ def coe_to_mee(elements):
 
     Args:
         elements (np.ndarray): orbital elements of form [a, e, i, Ω, ω, θ]
+        Angles are in degrees
     """
     a = elements[0]
     e = elements[1]
@@ -166,13 +196,21 @@ def coe_to_mee(elements):
     Ω = elements[3]
     ω = elements[4]
     θ = elements[5]
+    
+    # Convert degrees to radians
+    i_rad = np.radians(i)
+    Ω_rad = np.radians(Ω)
+    ω_rad = np.radians(ω)
+    θ_rad = np.radians(θ)
+    
+    
 
     p = a * (1 - e**2)
-    f = e * np.cos(ω + θ)
-    g = e * np.sin(ω + θ)
-    h = np.tan(i / 2) * np.cos(Ω)
-    k = np.tan(i / 2) * np.sin(Ω)
-    L = Ω + ω + θ
+    f = e * np.cos(ω_rad + θ_rad)
+    g = e * np.sin(ω_rad + θ_rad)
+    h = np.tan(i_rad / 2) * np.cos(Ω_rad)
+    k = np.tan(i_rad / 2) * np.sin(Ω_rad)
+    L = Ω_rad + ω_rad + θ_rad
     
     
     return np.array([p, f, g, h, k, L])
@@ -198,4 +236,12 @@ def mee_to_coe(elements):
     Ω = np.arctan2(k, h)
     θ = L - np.arctan2(g,f)
     # θ = L - Ω - ω
-    return np.array([a, e, i, Ω, ω, θ])
+    
+    # Convert radians to degrees
+    i_deg = np.degrees(i)
+    Ω_deg = np.degrees(Ω)
+    ω_deg = np.degrees(ω)
+    θ_deg = np.degrees(θ)
+    
+    
+    return np.array([a, e, i_deg, Ω_deg, ω_deg, θ_deg])
