@@ -39,14 +39,8 @@ def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density
     relative_velocity = find_relative_air_velocity(r_vec, velocity)
 
     # Calculate drag force magnitude
-<<<<<<< HEAD
-    # TODO: calculate relative velocity (based on earth rotation)
-    v_mag = np.linalg.norm(velocity)
-    drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * SAT_CD
-=======
     v_mag = np.linalg.norm(relative_velocity)
     drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * drag_coefficient()
->>>>>>> 6aad57894b3df24f2e405650cab41ff30c4a0693
     
     # Calculate drag force vector (opposite to velocity direction)
     drag_force = -np.outer(drag_force_mag, velocity / v_mag)
@@ -57,8 +51,6 @@ def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density
     
     return torque
 
-<<<<<<< HEAD
-=======
 def find_air_velocity(r_eci):
     """
     Calculate the relative velocity of the satellite to the air molecules,
@@ -103,7 +95,6 @@ def find_relative_air_velocity(r_eci, v):
 def drag_coefficient():
     Cd = 2.0
     return Cd
->>>>>>> 6aad57894b3df24f2e405650cab41ff30c4a0693
 
 
 # import numpy as np
