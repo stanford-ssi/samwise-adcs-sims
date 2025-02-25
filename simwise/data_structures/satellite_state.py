@@ -203,7 +203,7 @@ class SatelliteState:
 
     #TODO this is messy, clean up
     def update_forces(self, params):
-        self.Drag = dragPertubationTorque(params, self.e_angles, self.v_vec_trn, self.atmospheric_density)
+        self.Drag = dragPertubationTorque(params, self.r_eci, self.e_angles, self.v_vec_trn, self.atmospheric_density)
         
     ###———————————————————————————————————————————————————————————————————————###
     ###                       END Ground Truth Dynamics Model                 ###

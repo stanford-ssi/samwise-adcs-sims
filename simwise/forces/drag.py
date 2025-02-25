@@ -1,15 +1,16 @@
-import numpy as np 
+import numpy as np
 from simwise.math.area_projection import create_rotation_matrix, define_satellite_vertices, project_prism, calculate_projected_area
 from simwise.constants import *
 from simwise.world_model.atmosphere import *
 
 
-def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density):
+def dragPertubationTorque(params, r_eci, e_angles, velocity, atmospheric_density):
     """
     Calculate the drag perturbation torque on the satellite.
 
     Args:
         params (Parameters): The parameters object containing satellite properties.
+        r_eci (np.ndarray): Position vector in ECI coordinate frame
         e_angles (np.ndarray): Euler angles [psi, theta, phi], shape (3,)
         velocity (np.ndarray): Satellite orbital velocity vector in body frame, shape (3,)
         altitude (float): altitude of satellite
@@ -36,7 +37,7 @@ def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density
     projected_area = calculate_projected_area(projected_vertices)
     
     # Calculate velocity relative to air
-    relative_velocity = find_relative_air_velocity(r_vec, velocity)
+    relative_velocity = find_relative_air_velocity(r_eci, velocity)
 
     # Calculate drag force magnitude
     v_mag = np.linalg.norm(relative_velocity)
@@ -55,20 +56,31 @@ def find_air_velocity(r_eci):
     """
     Calculate the relative velocity of the satellite to the air molecules,
     assuming that the air molecules move with the angular velocity of Earth.
-
     Parameters:
     r_eci: current orbital position of satellite in ECI frame (km)
-
-    Return: 
+    Return:
     v_wind: Velocity of air particles at this position in ECI frame (m/s), assuming they move with same angular velocity as Earth (first approximation)
     """
     # Define rotational velocity vector (rad/s)
     w = 2*np.pi/SECONDS_PER_DAY
-    w_vec = np.ndarray([0, 0, w])
-
+    w_vec = np.array([0, 0, w])
+    
+    # Debug: Print shapes
+    # print(f"w_vec shape: {w_vec.shape}")
+    # print(f"r_eci shape: {np.array(r_eci).shape}")
+    # print(f"r_eci value: {r_eci}")
+    
+    # Make sure r_eci is a 3D vector
+    r_eci_3d = np.array(r_eci)
+    if len(r_eci_3d.shape) == 1 and r_eci_3d.shape[0] == 3:
+        # Already a 3D vector, good to go
+        r_eci_vec = r_eci_3d
+    else:
+        # Try to handle other cases or raise a more specific error
+        raise ValueError(f"r_eci must be a 3D vector, got shape {r_eci_3d.shape}")
+    
     # v = w x r
-    v_wind = np.cross(w_vec, r_eci*1000)
-
+    v_wind = np.cross(w_vec, r_eci_vec*1000)
     return v_wind
 
 def find_relative_air_velocity(r_eci, v):
@@ -84,7 +96,7 @@ def find_relative_air_velocity(r_eci, v):
     v_rel: relative velocity between satellite and air particles (m/s)
     """
     # Get air velocity in km/s
-    v_wind = find_air_velocity(r_eci)  # changed to match our previous function name
+    v_wind = find_air_velocity(r_eci)
     
     # Calculate relative velocity (v_satellite - v_air)
     v_rel = np.array(v) - v_wind
