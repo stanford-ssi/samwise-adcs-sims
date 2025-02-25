@@ -77,7 +77,10 @@ def quaternion_to_euler(q, sequence="zyx"):
     q4 = q[3]
     if sequence == "zyx":
         phi = np.arctan2((2*(q1*q2 + q3*q4)), 1 - 2*(q2**2 + q3**2))
-        theta = np.arcsin(2*(q1*q3 - q4*q2))
+        # theta = np.arcsin(2*(q1*q3 - q4*q2))
+        sin_theta = 2*(q1*q3 - q4*q2)
+        sin_theta = np.clip(sin_theta, -1.0, 1.0)
+        theta = np.arcsin(sin_theta)
         psi = np.arctan2(2*(q1*q4 + q2*q3), 1 - 2*(q3**2 + q4**2))
         return np.array([phi, theta, psi])
     else:
