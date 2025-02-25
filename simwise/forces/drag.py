@@ -40,7 +40,7 @@ def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density
 
     # Calculate drag force magnitude
     v_mag = np.linalg.norm(relative_velocity)
-    drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * drag_coefficient()
+    drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * SAT_CD
     
     # Calculate drag force vector (opposite to velocity direction)
     drag_force = -np.outer(drag_force_mag, velocity / v_mag)
@@ -92,9 +92,6 @@ def find_relative_air_velocity(r_eci, v):
     return v_rel
 
 
-def drag_coefficient():
-    Cd = 2.0
-    return Cd
 
 
 # import numpy as np
