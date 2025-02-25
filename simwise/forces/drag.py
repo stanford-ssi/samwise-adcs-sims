@@ -3,16 +3,15 @@ from simwise.math.area_projection import create_rotation_matrix, define_satellit
 from simwise.constants import *
 from simwise.world_model.atmosphere import *
 
-# DRAG CALCULATION:
 
-def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
+def dragPertubationTorque(r_vec, params, e_angles, velocity, atmospheric_density):
     """
     Calculate the drag perturbation torque on the satellite.
 
     Args:
         params (Parameters): The parameters object containing satellite properties.
         e_angles (np.ndarray): Euler angles [psi, theta, phi], shape (3,)
-        velocity (np.ndarray): Satellite velocity vector in body frame, shape (3,)
+        velocity (np.ndarray): Satellite orbital velocity vector in body frame, shape (3,)
         altitude (float): altitude of satellite
 
     Returns:
@@ -36,10 +35,13 @@ def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
     # Calculate projected area
     projected_area = calculate_projected_area(projected_vertices)
     
+    # Calculate velocity relative to air
+    relative_velocity = find_relative_air_velocity(r_vec, velocity)
+
     # Calculate drag force magnitude
     # TODO: calculate relative velocity (based on earth rotation)
     v_mag = np.linalg.norm(velocity)
-    drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * SAT_CD
+    drag_force_mag = 0.5 * atmospheric_density * v_mag**2 * projected_area * drag_coefficient()
     
     # Calculate drag force vector (opposite to velocity direction)
     drag_force = -np.outer(drag_force_mag, velocity / v_mag)
@@ -50,6 +52,9 @@ def dragPertubationTorque(params, e_angles, velocity, atmospheric_density):
     
     return torque
 
+def drag_coefficient():
+    Cd = 2.0
+    return Cd
 
 
 # import numpy as np
