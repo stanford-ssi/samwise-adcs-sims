@@ -35,6 +35,11 @@ def init_state(params):
 def run_one(params):
     """This is the main function that runs the sim for a single set of params
     """
+    # Print initial 
+    print("------ q, q_d; w, w_d ------")
+    print(params.q_initial, params.q_desired)
+    print(params.w_initial, params.w_desired)
+
     state = init_state(params)
 
     states = []

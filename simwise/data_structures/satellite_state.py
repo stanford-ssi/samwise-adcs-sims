@@ -84,12 +84,12 @@ class SatelliteState:
         # TODO implement enums here and for control mode
         if params.pointing_mode == "SunPointingNadirConstrained":
             self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
+
         else:
             raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
 
     def compute_control_torque(self, params: Parameters):
-        """Compute the desired control torque for the current state\
-            
+        """Compute the desired control torque for the current state
         """
         x_attitude = np.hstack((self.q, self.w))
         x_attitude_desired = np.hstack((self.q_d, self.w_d))

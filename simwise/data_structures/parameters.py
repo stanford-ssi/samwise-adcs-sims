@@ -57,6 +57,7 @@ class QuaternionParameter(ArrayParameter):
     """
     Specialized parameter for quaternions. Inherits behavior from ArrayParameter.
     """
+    print(ArrayParameter)
     pass
 
 
