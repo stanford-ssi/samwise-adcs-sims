@@ -22,7 +22,7 @@ from simwise.world_model.atmosphere import compute_density
 from simwise.world_model.magnetic_field import magnetic_field
 from simwise.world_model.sun import approx_sun_position
 from simwise.guidance.sun_pointing import compute_sun_pointing_nadir_constrained
-
+import simwise.guidance.nadir_pointing_only as nadir_pointing_only
 
 class SatelliteState:
     # Time
@@ -84,6 +84,9 @@ class SatelliteState:
         # TODO implement enums here and for control mode
         if params.pointing_mode == "SunPointingNadirConstrained":
             self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
+            
+        elif params.pointing_mode == "NadirPointing":
+            self.q_d = nadir_pointing_only.compute_nadir_pointing(self.r_eci)
 
         else:
             raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
