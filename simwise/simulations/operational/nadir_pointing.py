@@ -10,7 +10,7 @@ def run():
     overrides = {
         # for quaternions, set mean to 0 (because we are rotating the quaternion by random Euler angles)
         "q_initial": QuaternionParameter(np.array([1, 0, 0, 0]), variance=np.array([0.1, 0.1, 0.1])),
-        "pointing_mode": "SunPointingNadirConstrained",
+        "pointing_mode": "NadirPointing",
 
         "Cp": ArrayParameter(np.array([0.1, 0.2, 0.3]), mean=np.array([0.1, 0.2, 0.3]), variance=0.003),
         "Cg": ArrayParameter(np.array([0.2, 0.3, 0.4]), mean=np.array([0.2, 0.3, 0.4]), variance=0.003),
