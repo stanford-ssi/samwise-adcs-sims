@@ -49,9 +49,6 @@ class SatelliteState:
     r_ecef: np.ndarray  # [x, y, z] in [m]
     lla_wgs84: np.ndarray  # [lat, lon, alt] in [rad, rad, m]
 
-    #  Magnetorquer data
-    B: np.ndarray   # [T]
-    mu: np.ndarray  # [A • m^2]
     
     # Inertial Variables:
     # Velocity Components of Satellite on Orbit
@@ -81,12 +78,12 @@ class SatelliteState:
     def compute_target_attitude(self, params: Parameters):
         """Compute the desired attitude for the current state"""
 
-        # TODO implement enums here and for control mode
-        if params.pointing_mode == "SunPointingNadirConstrained":
-            self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
+        # # TODO implement enums here and for control mode
+        # if params.pointing_mode == "SunPointingNadirConstrained":
+        #     self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
 
-        else:
-            raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
+        # else:
+        #     raise ValueError(f"Unknown pointing mode '{params.pointing_mode}'")
 
     def compute_control_torque(self, params: Parameters):
         """Compute the desired control torque for the current state
@@ -104,7 +101,7 @@ class SatelliteState:
                                                      params.K_d,
                                                      tau_max=params.max_torque)
         elif self.control_mode == "BDOT":
-            tau, mu = bdot_bang_bang(x_attitude, self.B, params.mu_max)
+            tau, mu = bdot_bang_bang(x_attitude, self.magnetic_field, params.mu_max)
             self.desired_control_torque = tau
             self.mu = mu
             # tau, mu = bdot_step_bang_bang(x_attitude, self.B, params.mu_max)

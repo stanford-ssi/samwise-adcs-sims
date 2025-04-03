@@ -115,6 +115,9 @@ class Parameters:
         self.Cp = ArrayParameter([0, 0, 0])
         self.Cg = ArrayParameter([20 / 4, 10 * np.sqrt(2) / 2, 10 * np.sqrt(2) / 2])
 
+        # Magnetorquer magnetic moment (A m^2)
+        self.mu_max = 0.219
+
         # Generate ECEF to PN table
         # This is NOT a regular parameter of the table, and should not be dispersed
         self.ecef_pn_table = generate_ecef_pn_table(self.epoch_jd, self.t_end)

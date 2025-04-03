@@ -1,106 +1,69 @@
-# Simulate control with bdot
 import numpy as np
-from tqdm import tqdm
-import copy
 
-from simwise.data_structures.parameters import Parameters
-from simwise.data_structures.satellite_state import SatelliteState
-from simwise.utils.plots import plot_states_plotly
-#from simwise.orbit.equinoctial import *
-
-
-def magnetic_field(t):
-    # Time-varying magnetic field (simulating orbital motion)
-    # This creates a rotating magnetic field as might be seen in orbit (NOT ACCURATE W/ POLE BEHAVIOR)
-    B_magnitude = 4.5e-5  # ~45 μT, typical in LEO
-    omega_orbit = 2 * np.pi / 5600  # Approximate orbital angular velocity
-
-    Bx = B_magnitude * np.sin(omega_orbit * t)
-    By = B_magnitude * np.cos(omega_orbit * t)
-    Bz = B_magnitude * 0.5 * np.sin(2 * omega_orbit * t)
-
-    return np.array([Bx, By, Bz])
-
+from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
+from simwise.utils.plots import plot_results, plot_states_plotly
+from simwise.simulations.base import run_dispersions, run_one
 
 def run():
-    params = Parameters()
-    state = SatelliteState()
 
-    # Define initial state
-    state.q = np.array([1, 0, 0, 0])
-    state.w = np.array([0.1, -0.15, 0.08])  # Initial angular velocity [rad/s]
+    # Example Usage
+    overrides = {
+        "w_initial": ArrayParameter([5.0, 4.0, 2.0]),
+        "control_mode": "BDOT",
 
-    # Simulation parameters
-    params.dt_attitude = 5  # [sec]
-    params.t_end = 24 * 60 * 60  # 8 hour simulation
+        "Cp": ArrayParameter(np.array([0.1, 0.2, 0.3]), mean=np.array([0.1, 0.2, 0.3]), variance=0.003),
+        "Cg": ArrayParameter(np.array([0.2, 0.3, 0.4]), mean=np.array([0.2, 0.3, 0.4]), variance=0.003),
+        "num_dispersions": 16,
+        "dt_orbit": 120,
+        "t_end": 5 * 60,
+    }
+    params = Parameters(**overrides)
+    # states, times = run_one(params)
+    # states = np.array([states])
+    states, times = run_dispersions(params, runner=run_one)
 
-    # Simulate
-    print("Simulating...")
-    states: list[SatelliteState] = []
-    num_points = int(params.t_end // params.dt_attitude)
+    plot_results(states)
+    
+    # # Plot angular velocity
+    # fig_mag = plot_states_plotly(
+    #     states[0],
+    #     lambda state: state.jd,
+    #     {
+    #         "x": lambda state: state.magnetic_field[0],
+    #         "y": lambda state: state.magnetic_field[1],
+    #         "z": lambda state: state.magnetic_field[2],
+    #     },
+    #     spacing=0.05,
+    #     title_text="Magnetic Field Vector vs Time",
+    # )
+    # fig_mag.show()
 
-    for _ in tqdm(range(num_points)):
-        state.propagate_time(params, params.dt_attitude)
-
-        # Set current magnetic field - TODO: replace with world model
-        state.B = magnetic_field(state.t)
-
-        state.propagate_attitude_bdot(params)
-        states.append(copy.deepcopy(state))
-
-    # Plot angular velocity
+    # Plot e_angles
     fig_mag = plot_states_plotly(
-        states,
-        lambda state: state.t,
+        states[0],
+        lambda state: state.jd,
         {
-            "Angular Velocity Magnitude [rad/s]": lambda state: np.linalg.norm(state.w),
+            "x": lambda state: state.e_angles[0] / np.linalg.norm(state.e_angles),
+            "y": lambda state: state.e_angles[1] / np.linalg.norm(state.e_angles),
+            "z": lambda state: state.e_angles[2] / np.linalg.norm(state.e_angles),
         },
         spacing=0.05,
-        title_text="Detumbling Performance",
+        title_text="Euler Angles vs Time",
     )
     fig_mag.show()
 
-    fig_omega = plot_states_plotly(
-        states,
-        lambda state: state.t,
+    # Plot q_d
+    fig_mag = plot_states_plotly(
+        states[0],
+        lambda state: state.jd,
         {
-            "ωx": lambda state: state.w[0],
-            "ωy": lambda state: state.w[1],
-            "ωz": lambda state: state.w[2],
+            "q_d0": lambda state: state.q_d[0] / np.linalg.norm(state.q_d),
+            "q_d1": lambda state: state.q_d[1] / np.linalg.norm(state.q_d),
+            "q_d2": lambda state: state.q_d[2] / np.linalg.norm(state.q_d),
+            "q_d3": lambda state: state.q_d[3] / np.linalg.norm(state.q_d),
         },
         spacing=0.05,
-        y_label="Angular velocity [rad/s]",
-        title_text="Angular Velocities vs Time",
+        title_text="q vs q_d vs time",
     )
-    fig_omega.show()
-
-    # Magnetic moments
-    fig_mu = plot_states_plotly(
-        states,
-        lambda state: state.t,
-        {
-            "μx": lambda state: state.mu[0],
-            "μy": lambda state: state.mu[1],
-            "μz": lambda state: state.mu[2],
-        },
-        spacing=0.05,
-        y_label="Magnetic moment [A⋅m²]",
-        title_text="Magnetic Moments vs Time",
-    )
-
-    fig_mu.show()
-
-    # Magnetic field
-    fig_B = plot_states_plotly(
-        states,
-        lambda state: state.t,
-        {
-            "Bx": lambda state: state.B[0],
-            "By": lambda state: state.B[1],
-            "Bz": lambda state: state.B[2],
-        },
-        spacing=0.05,
-        y_label="Magnetic field [T]",
-        title_text="Magnetic field [T]",
-    )
-    fig_B.show()
+    fig_mag.show()
+    

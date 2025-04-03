@@ -8,6 +8,7 @@ from tqdm import tqdm
 from simwise.data_structures.parameters import ArrayParameter, QuaternionParameter, ScalarParameter, Parameters
 from simwise.data_structures.satellite_state import SatelliteState, interpolate_state
 from simwise.math.coordinate_transforms import coe_to_mee
+from simwise.world_model.magnetic_field import magnetic_field
 
 def init_state(params):
     state = SatelliteState()
