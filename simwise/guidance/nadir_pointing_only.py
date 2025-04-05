@@ -9,14 +9,12 @@ def compute_nadir_pointing(r_eci):
         r_sun_eci: np.ndarray   -   This is the sun position in the ECI frame, vector points from Earth to Sun
         r_eci: np.ndarray       -   This is the satellite position in the ECI frame, vector points from Earth to Satellite
     """
-
     
     # Get the nadir vector in the ECI frame
     # We normalize to get a unit direction vector
     # The negative sign makes this point from the satellite to the earth
     # This is also known as the nadir vector
     nadir_eci = -np.array(r_eci) / np.linalg.norm(r_eci)
-    
     
     # Choose a reference vector that's likely not parallel to nadir
     # We'll use the ECI z-axis as an initial guess
@@ -28,7 +26,6 @@ def compute_nadir_pointing(r_eci):
         # If it IS parallel, then use the ECI x-axis as a reference
         # Either vector will work because you can't be parallel to both
         ref = np.array([1, 0, 0])
-    
     
     # Compute y-axis perpendicular to nadir and reference
     y_body = np.cross(nadir_eci, ref)

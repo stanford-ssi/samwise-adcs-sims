@@ -95,7 +95,7 @@ class Parameters:
         self.allocation_mode = "MagicActuators"
 
         # Attitude target
-        self.pointing_mode = "SunPointingNadirConstrained"
+        self.pointing_mode = "NadirPointing"
 
         # Initial orbit properties
         self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)
