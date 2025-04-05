@@ -155,7 +155,7 @@ def run_dispersions(params, runner=run_one):
                 # print(attr, getattr(dispersed_params, attr))
                 pass
     
-    num_workers = cpu_count()
+    num_workers = 10
     states_from_dispersions = []
     times_from_dispersions = []
     

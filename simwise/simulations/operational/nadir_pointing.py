@@ -216,7 +216,7 @@ def run():
     # Plot sun vector
     fig_mag = plot_states_plotly(
         states[0],
-        lambda state: state.jd,
+        lambda state: state .jd,
         {
             "x": lambda state: state.r_sun_eci[0] / np.linalg.norm(state.r_sun_eci),
             "y": lambda state: state.r_sun_eci[1] / np.linalg.norm(state.r_sun_eci),

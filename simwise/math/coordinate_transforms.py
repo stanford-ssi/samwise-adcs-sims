@@ -244,4 +244,5 @@ def mee_to_coe(elements):
     θ_deg = np.degrees(θ)
     
     
-    return np.array([a, e, i_deg, Ω_deg, ω_deg, θ_deg])
+    #return np.array([a, e, i_deg, Ω_deg, ω_deg, θ_deg])
+    return np.array([a, e, i, Ω, ω, θ])
