@@ -86,7 +86,6 @@ class SatelliteState:
             self.q_d = compute_sun_pointing_nadir_constrained(self.r_sun_eci, self.r_eci)
             
         elif params.pointing_mode == "NadirPointing":
-            print("Computing nadir pointing attitude...")
             self.q_d = nadir_pointing_only.compute_nadir_pointing(self.r_eci)
 
         # else:
