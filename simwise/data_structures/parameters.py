@@ -72,13 +72,6 @@ class Parameters:
         # Simulation configuration
         self.num_dispersions = 20
 
-        # Time parameters
-        self.dt_orbit = 120
-        self.dt_attitude = 0.1
-        self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
-        self.t_start = 0
-        self.t_end = 90 * 60
-
         # Inertia and controls
         self.inertia = ArrayParameter(
             [0.01461922201, 0.0412768466, 0.03235309961]
@@ -98,12 +91,20 @@ class Parameters:
         self.pointing_mode = "NadirPointing"
 
         # Initial orbit properties
-        self.a = ScalarParameter(constants.EARTH_RADIUS_M + 590e3)
-        self.e = ScalarParameter(0.005)
-        self.i = ScalarParameter(np.deg2rad(97.5))
-        self.Ω = ScalarParameter(0.1)
-        self.ω = ScalarParameter(0.1)
-        self.θ = ScalarParameter(0.1)
+        self.a = ScalarParameter(constants.EARTH_RADIUS_M + 510e3)  # Semi-major axis
+        self.e = ScalarParameter(0)                                 # Eccentricity
+        self.i = ScalarParameter(np.deg2rad(97.5))                  # Inclination
+        self.Ω = ScalarParameter(0)                                 # Right ascension of ascending node
+        self.ω = ScalarParameter(0)                                 # Argument of perigee
+        self.θ = ScalarParameter(0)                                 # True anomaly
+        
+        # Time parameters
+        self.dt_orbit = 120
+        self.dt_attitude = 0.1
+        self.epoch_jd = dt_utc_to_jd(datetime.datetime(2024, 11, 29, 0, 0, 0))
+        self.t_start = 0
+        # Compute end time to be precisely 1 full orbit
+        self.t_end = 2*np.pi*np.sqrt(self.a**3/constants.MU_EARTH)
 
         # Attitude initial conditions
         self.q_initial = QuaternionParameter([1, 0, 0, 0]) #variance=(0.05, 0.05, 0.05))
