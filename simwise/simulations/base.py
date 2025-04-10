@@ -48,6 +48,9 @@ def run_one(params):
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
     num_points_orbit = int((params.t_end - params.t_start) // params.dt_orbit) + 1
     
+    print(f"num_points_attitude: {num_points_attitude}")
+    print(f"num_points_orbit: {num_points_orbit}")
+    
     # Initialize the state of the orbit
     # TODO make an initialization function
     state.update_other_orbital_state_representations(params)
@@ -57,6 +60,7 @@ def run_one(params):
     for i in range(num_points_attitude):
         
         # Propagate orbit for greater time step - orbit
+        # Only update orbital parameters every dt_orbit (less frequent than dt_attitude)
         if i % int(params.dt_orbit / params.dt_attitude) == 0:
             # Save the current state for linear interpolation in the future
             infrequent_state_prev = copy.deepcopy(infrequent_state_next)
@@ -73,6 +77,8 @@ def run_one(params):
             infrequent_state_next.update_environment(params)
             infrequent_state_next.propagate_time(params, params.dt_orbit)
 
+
+        # Maintain the linearlized orbit state
         else: 
             # Interpolate things that take a long time to compute
             state.orbit_mee = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="orbit_mee")
@@ -82,6 +88,7 @@ def run_one(params):
             state.atmospheric_density = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="atmospheric_density")
             state.r_sun_eci = interpolate_state(infrequent_state_prev, infrequent_state_next, state.t, attribute="r_sun_eci")   
     
+        # Evry time step for attitude (dt_attitude), actually update the attitude:
         # Update other state representations
         state.update_other_orbital_state_representations(params)
 
@@ -105,6 +112,7 @@ def run_one(params):
 
         states.append(copy.deepcopy(state))
         times.append(state.t)
+ 
 
     return states, times
 
@@ -128,19 +136,22 @@ def run_orbit(params):
 def run_attitude(params):
     """This function runs only the attitude simulation
     """
+
+    
     state = init_state(params)
 
     states = []
     times = []
     num_points_attitude = int((params.t_end - params.t_start) // params.dt_attitude) + 1
 
-    for _ in range(num_points_attitude):
+    for i in range(num_points_attitude):
         state.propagate_time(params, params.dt_attitude)
         times.append(state.t)
         state.compute_control_torque(params)
         state.allocate_control_torque(params)
         state.propagate_attitude(params)
         states.append(copy.deepcopy(state))
+        
 
     return states, times
 

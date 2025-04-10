@@ -229,3 +229,25 @@ def quaternion_to_dcm(q):
     ])
 
     return dcm
+
+def ensure_quaternion_continuity(q_prev, q_curr):
+    """
+    Ensure quaternion continuity by flipping signs if needed.
+    This prevents jump discontinuities when tracking quaternions over time.
+    
+    Args:
+        q_prev (np.ndarray): Previous quaternion
+        q_curr (np.ndarray): Current quaternion
+    
+    Returns:
+        np.ndarray: Current quaternion with sign adjusted for continuity
+    """
+    # Compute dot product between quaternions
+    dot_product = np.sum(q_prev * q_curr)
+    
+    # If dot product is negative, flip the sign of the current quaternion
+    # This means the shortest path between quaternions crosses the sign boundary
+    if dot_product < 0:
+        return -q_curr
+    else:
+        return q_curr

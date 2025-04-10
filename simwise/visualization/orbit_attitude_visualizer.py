@@ -36,20 +36,21 @@ def visualize_orbit_and_attitude(states):
     orbit_z = [state.r_eci[2] for state in states]
     ax.plot(orbit_x, orbit_y, orbit_z, 'g--', alpha=0.5, label='Orbit')
     
-    # Initialize satellite position and attitude arrows
+    # Initialize satellite position, attitude arrows, and nadir vector
     sat_pos, = ax.plot([], [], [], 'ko', label='Satellite')
     x_arrow, = ax.plot([], [], [], 'r-', lw=2, label='X-axis')
     y_arrow, = ax.plot([], [], [], 'g-', lw=2, label='Y-axis')
     z_arrow, = ax.plot([], [], [], 'b-', lw=2, label='Z-axis')
+    nadir_line, = ax.plot([], [], [], 'k--', lw=1, label='Nadir Vector')  # Add nadir vector line
     
     # Set plot limits based on orbit size
     max_range = max(max(np.abs(orbit_x)), max(np.abs(orbit_y)), max(np.abs(orbit_z)))
     ax.set_xlim([-max_range, max_range])
-    ax.set_ylim([-max_range, max_range])
+    ax.set_ylim([-max_range, max_range]) 
     ax.set_zlim([-max_range, max_range])
     
-    # Add legend
-    ax.legend()
+    # Add legend with fixed location instead of "best"
+    ax.legend(loc='upper right')
     
     def update(frame):
         # Get position and quaternion for current frame
@@ -89,10 +90,14 @@ def visualize_orbit_and_attitude(states):
         z_arrow.set_data([pos[0], pos[0] + z_rotated[0]], [pos[1], pos[1] + z_rotated[1]])
         z_arrow.set_3d_properties([pos[2], pos[2] + z_rotated[2]])
         
+        # Update nadir vector line (from satellite to Earth center)
+        nadir_line.set_data([0, pos[0]], [0, pos[1]])  # Line from origin to satellite
+        nadir_line.set_3d_properties([0, pos[2]])
+        
         # Update title with time
         ax.set_title(f'Time: {state.t:.1f} seconds')
         
-        return sat_pos, x_arrow, y_arrow, z_arrow
+        return sat_pos, x_arrow, y_arrow, z_arrow, nadir_line
     
     # Create animation
     num_frames = len(states) // 100
