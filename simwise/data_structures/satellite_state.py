@@ -187,7 +187,6 @@ class SatelliteState:
         # Solve for Keplerian Orbital Elements
         self.orbit_keplerian = mee_to_coe(self.orbit_mee)
         self.orbit_keplerian[5] = self.orbit_keplerian[5] % (2 * np.pi)
-        
         # Solve for Velocity, Position and Altitude at this Orbital Time Step
         rv_eci = mee_to_rv(self.orbit_mee, constants.MU_EARTH)
 
