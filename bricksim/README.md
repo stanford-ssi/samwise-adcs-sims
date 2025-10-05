@@ -1,0 +1,44 @@
+Tentative Organization
+
+- /gnc
+  - G, N, C, Utils, etc.
+- /physics
+  - dynamics
+  - energy
+  - magnetics
+  - drag
+  - gravity (including gradient)
+  - thermal
+  - prop
+  - solar
+  - rf
+- /environment
+  - /earth
+    - atmosphere
+    - B field
+    - g field
+    - /ground
+      - station locations
+  - /sun
+    - solar radiation
+    - irradiation
+  - /space
+    - vacuum stuff
+- /math
+  - integrators
+  - /rotations
+    - quaternions, dcm, euler, axis_angle
+    - frames
+  - time
+  - unit conversions
+  - area projection
+- /api
+  - horizons
+  - B field
+- /simulation
+  - /satellite - satellite state and its sensor/actuator models
+    - /sensors
+    - /actuators
+  - Parameters (data structure)
+- /results
+  - plots
