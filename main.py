@@ -15,6 +15,7 @@ from simwise.forces import j2_perturbation
 from simwise.torques import gravity_gradient
 from simwise.dynamics import state_dot, attitude_dot, orbit_dot
 from simwise.constants import R_EARTH
+from simwise.utils.time import date2mjd
 
 I_body = np.array([[0.01861, 0.00529, 0.0001439],
               [0.00529, 0.01833, 0.0000584709],
@@ -29,6 +30,7 @@ def propagate():
         r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
         v_eci=np.array([0, 5445.48, 5445.48]),
         t=0.0,
+        mjd_epoch=date2mjd(2026, 2, 20) # start of simulation
     )
     dt = 0.1
     orbit_every = 100
