@@ -1,0 +1,4 @@
+Metadata-Version: 2.4
+Name: simwise
+Version: 0.1.0
+Requires-Dist: numpy
