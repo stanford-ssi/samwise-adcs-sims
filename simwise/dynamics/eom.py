@@ -15,25 +15,27 @@ def q_dot(state):
     w = state.w
     return 0.5 * Quaternion(w[0], w[1], w[2], 0) * q
 
-def w_dot(state, params, tau):
+def w_dot(state, params, torques=[]):
     w = state.w
-    return np.linalg.inv(params.I) @ (tau - np.cross(w, params.I @ w))
+    I = params.I
+    tau = sum((t(state, params) for t in torques), np.zeros(3))
+    return np.linalg.inv(I) @ (tau - np.cross(w, I @ w))
 
 def r_dot(state):
-    r = state.r
     v = state.v
     return v
 
-def v_dot(state, params, F):
-    v = state.v
-    r = np.linalg.norm(state.r)
-    return -MU_EARTH * state.r / r**3 + F / params.m # treat F as perturbation
+def v_dot(state, params, perturbations=[]):
+    r = state.r
+    r_mag = np.linalg.norm(r)
+    a = sum((p(state, params) for p in perturbations), np.zeros(3))
+    return -MU_EARTH * r / r_mag**3 + a
 
-def attitude_dot(state, params, tau):
-    return SatelliteState(q_dot(state), w_dot(state, params, tau), state.r, state.v)
+def attitude_dot(state, params, torques=[]):
+    return SatelliteState(q_dot(state), w_dot(state, params, torques), state.r, state.v)
 
-def orbit_dot(state, params, F):
-    return SatelliteState(state.q, state.w, r_dot(state), v_dot(state, params, F))
+def orbit_dot(state, params, perturbations=[]):
+    return SatelliteState(state.q, state.w, r_dot(state), v_dot(state, params, perturbations))
 
-def state_dot(state, params, tau, F):
-    return attitude_dot(state, params, tau) + orbit_dot(state, params, F)
+def state_dot(state, params, torques=[], perturbations=[]):
+    return attitude_dot(state, params, torques) + orbit_dot(state, params, perturbations)

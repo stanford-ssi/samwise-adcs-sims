@@ -11,6 +11,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from simwise.math import Quaternion, rk4
 from simwise.satellite import SatelliteState, SatelliteParams
+from simwise.forces import j2_perturbation
+from simwise.torques import gravity_gradient
 from simwise.dynamics import state_dot, attitude_dot, orbit_dot
 from simwise.constants import R_EARTH
 
@@ -24,27 +26,25 @@ def propagate():
     state = SatelliteState(
         q_eci2body=Quaternion(0, 0, 0, 1),
         w_eci=np.array([0.0, 0.0, 0.1]),
-        r_eci=np.array([R_EARTH, 0.0, 0.0]),
-        v_eci=np.array([0.0, 10000.0, 0.0]),
+        r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
+        v_eci=np.array([0, 5445.48, 5445.48]),
         t=0.0,
     )
-    tau = np.zeros(3)
-    F = np.zeros(3)
     dt = 0.1
-    dt_orbit = dt * 100
-    tf = 3.0 * 3600.0 # [s]
+    orbit_every = 100
+    dt_orbit = dt * orbit_every
+    tf = 0.5 * 3600.0 # [s]
 
     trajectory = []
     n_steps = int(tf / dt)
-    orbit_every = 100
-    f_orbit = lambda s, t: orbit_dot(s, params, F)
-    f_attitude = lambda s, t: attitude_dot(s, params, tau)
+    f_orbit = lambda s, t: orbit_dot(s, params, perturbations=[])
+    f_attitude = lambda s, t: attitude_dot(s, params, torques=[gravity_gradient])
     with tqdm(total=n_steps, desc="Propagating", unit="step") as pbar:
         step = 0
         while state.t < tf:
             trajectory.append(state)
             if step % orbit_every == 0: # propagate orbit a lot less often than attitude
-                state_orbit = rk4(state, dt * orbit_every, f_orbit)
+                state_orbit = rk4(state, dt_orbit, f_orbit)
             state = rk4(state, dt, f_attitude)
             state.r = state_orbit.r
             state.v = state_orbit.v

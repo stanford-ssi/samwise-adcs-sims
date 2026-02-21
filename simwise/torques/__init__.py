@@ -1,0 +1,1 @@
+from simwise.torques.gravity_gradient import gravity_gradient
