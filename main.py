@@ -22,7 +22,7 @@ state0 = SatelliteState(
     q_eci2body=Quaternion(0, 0, 0, 1),
     w_eci=np.array([0.0, 0.0, 0.1]),
     r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
-    v_eci=np.array([0, 5445.48, 5545.48]),
+    v_eci=np.array([-200.0, 5445.48, 5545.48]),
     t=0.0,
     mjd_epoch=date2mjd(2026, 2, 20),
 )

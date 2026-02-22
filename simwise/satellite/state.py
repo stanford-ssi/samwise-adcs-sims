@@ -11,6 +11,7 @@ class SatelliteState:
 
         # Epoch
         self.mjd_epoch = mjd_epoch # [days]
+        self.gyro_bias = np.zeros(3) # [rad/s]
 
     def __repr__(self):
         return f"SatelliteState(t={self.t}, q={self.q}, w={self.w}, r={self.r}, v={self.v})"

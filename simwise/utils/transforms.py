@@ -32,3 +32,29 @@ def eci2ecef(r_eci, gmst):
 def ecef2eci(r_ecef, gmst):
     R_ecef2eci = R3(-gmst)
     return R_ecef2eci @ r_ecef
+
+def ecef2enu(r_ecef, B, L, H):
+    r_obs = blh2ecef(B, L, H)
+    R_ecef2enu = R_ecef2enu(B, L)
+    r_enu = R_ecef2enu @ (r_ecef - r_obs)
+    return r_enu
+
+def enu2ecef(r_enu, B, L, H):
+    r_obs = blh2ecef(B, L, H)
+    R_enu2ecef = R3(-(90 + L)) @ R1(90 - B) @ r_enu
+    r_ecef = R_enu2ecef @ r_enu + r_obs
+    return r_ecef
+
+def R_ecef2enu(B, L):
+    return R1(90 - B) @ R3(90 + L)
+
+def R_enu2ecef(B, L):
+    return R3(-(90 + L)) @ R1(B - 90)
+
+def enu2azel(r_enu):
+    E = r_enu[0]
+    N = r_enu[1]
+    U = r_enu[2]
+    az = np.arctan2(N, E)
+    el = np.arctan2(U, np.sqrt(E**2 + N**2))
+    return az, el
