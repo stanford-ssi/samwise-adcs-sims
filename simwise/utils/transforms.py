@@ -10,7 +10,11 @@ from simwise.math.quaternion import Quaternion
 from simwise.constants import R_EARTH, E_WGS84
 from simwise.math.rot import R1, R2, R3
 
-def blh2ecef(B, L, H):
+def blh2ecef(blh: np.array):
+    B = blh[0]
+    L = blh[1]
+    H = blh[2]
+
     N = R_EARTH / np.sqrt(1 - E_WGS84**2 * np.sin(B)**2)
     x = (N + H) * np.cos(B) * np.cos(L)
     y = (N + H) * np.cos(B) * np.sin(L)
@@ -33,28 +37,34 @@ def ecef2eci(r_ecef, gmst):
     R_ecef2eci = R3(-gmst)
     return R_ecef2eci @ r_ecef
 
-def ecef2enu(r_ecef, B, L, H):
-    r_obs = blh2ecef(B, L, H)
-    R_ecef2enu = R_ecef2enu(B, L)
-    r_enu = R_ecef2enu @ (r_ecef - r_obs)
+def ecef2enu(r_ecef, blh: np.array):
+    B = blh[0]
+    L = blh[1]
+    r_obs = blh2ecef(blh)
+    r_enu = R_ecef2enu(B, L) @ (r_ecef - r_obs)
     return r_enu
 
-def enu2ecef(r_enu, B, L, H):
-    r_obs = blh2ecef(B, L, H)
-    R_enu2ecef = R3(-(90 + L)) @ R1(90 - B) @ r_enu
-    r_ecef = R_enu2ecef @ r_enu + r_obs
+def enu2ecef(r_enu, blh):
+    B = blh[0]
+    L = blh[1]
+    r_obs = blh2ecef(blh)
+    r_ecef = R_enu2ecef(B, L) @ r_enu + r_obs
     return r_ecef
 
 def R_ecef2enu(B, L):
-    return R1(90 - B) @ R3(90 + L)
+    return R1(np.pi/2 - B) @ R3(np.pi/2 + L)
 
 def R_enu2ecef(B, L):
-    return R3(-(90 + L)) @ R1(B - 90)
+    return R3(-(np.pi/2 + L)) @ R1(B - np.pi/2)
 
 def enu2azel(r_enu):
     E = r_enu[0]
     N = r_enu[1]
     U = r_enu[2]
-    az = np.arctan2(N, E)
+    az = np.arctan2(E, N)
     el = np.arctan2(U, np.sqrt(E**2 + N**2))
+
+    # wrap to 0 to 2pi for azimuth
+    az = (az + 2*np.pi) % (2*np.pi)
+
     return az, el
