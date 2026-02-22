@@ -8,7 +8,7 @@ Coordinate transformations
 import numpy as np
 from simwise.math.quaternion import Quaternion
 from simwise.constants import R_EARTH, E_WGS84
-from simwise.utils.rot import R1, R2, R3
+from simwise.math.rot import R1, R2, R3
 
 def blh2ecef(B, L, H):
     N = R_EARTH / np.sqrt(1 - E_WGS84**2 * np.sin(B)**2)

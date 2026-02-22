@@ -8,7 +8,7 @@ J2 perturbation
 import numpy as np
 from simwise.constants import R_EARTH, MU_EARTH, J2_EARTH
 
-def j2_perturbation(state, params):
+def j2(state, params):
     x, y, z = state.r
     r = np.linalg.norm(state.r)
     r2 = r**2

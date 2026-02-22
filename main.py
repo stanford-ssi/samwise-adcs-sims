@@ -11,10 +11,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from simwise.math import Quaternion, rk4
 from simwise.satellite import SatelliteState, SatelliteParams
-from simwise.forces import j2_perturbation
+from simwise.forces import j2
 from simwise.torques import gravity_gradient
 from simwise.dynamics import state_dot, attitude_dot, orbit_dot
-from simwise.constants import R_EARTH
+from simwise.utils.orbital_elements import state2coe
+from simwise.constants import R_EARTH, MU_EARTH
 from simwise.utils.time import date2mjd
 
 I_body = np.array([[0.01861, 0.00529, 0.0001439],
@@ -28,18 +29,18 @@ def propagate():
         q_eci2body=Quaternion(0, 0, 0, 1),
         w_eci=np.array([0.0, 0.0, 0.1]),
         r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
-        v_eci=np.array([0, 5445.48, 5445.48]),
+        v_eci=np.array([0, 5445.48, 5545.48]),
         t=0.0,
         mjd_epoch=date2mjd(2026, 2, 20) # start of simulation
     )
     dt = 0.1
     orbit_every = 100
     dt_orbit = dt * orbit_every
-    tf = 0.5 * 3600.0 # [s]
+    tf = 1.5 * 3600.0 # [s]
 
     trajectory = []
     n_steps = int(tf / dt)
-    f_orbit = lambda s, t: orbit_dot(s, params, perturbations=[])
+    f_orbit = lambda s, t: orbit_dot(s, params, perturbations=[j2])
     f_attitude = lambda s, t: attitude_dot(s, params, torques=[gravity_gradient])
     with tqdm(total=n_steps, desc="Propagating", unit="step") as pbar:
         step = 0
@@ -82,12 +83,23 @@ def build_orbit_fig(h):
     ry = [s.r[1] for s in h]
     rz = [s.r[2] for s in h]
 
+    coes = np.array([state2coe(s) for s in h])
+    a, e, i, W, w, nu = (
+        coes[:, 0],
+        coes[:, 1],
+        coes[:, 2],
+        coes[:, 3],
+        coes[:, 4],
+        coes[:, 5],
+    )
+
+    n_coe = 6
     fig = make_subplots(
-        rows=2, cols=2,
-        specs=[[{"type": "scatter3d", "colspan": 2}, None],
-               [{"type": "scatter"}, {"type": "scatter"}]],
-        subplot_titles=("3-D Orbit (ECI)", "Position Components [m]", "Velocity Components [m/s]"),
-        vertical_spacing=0.12,
+        rows=n_coe, cols=2,
+        specs=[[{"type": "scatter3d", "rowspan": n_coe}, {"type": "scatter"}]]
+             + [[None, {"type": "scatter"}]] * (n_coe - 1),
+        column_widths=[0.5, 0.5],
+        vertical_spacing=0.04,
     )
 
     # 3-D trajectory
@@ -99,32 +111,34 @@ def build_orbit_fig(h):
         showlegend=False,
     ), row=1, col=1)
 
-    # Earth sphere for reference
+    # Earth sphere
     u = np.linspace(0, 2*np.pi, 40)
     v = np.linspace(0, np.pi, 20)
-    ex = R_EARTH * np.outer(np.cos(u), np.sin(v))
-    ey = R_EARTH * np.outer(np.sin(u), np.sin(v))
-    ez = R_EARTH * np.outer(np.ones_like(u), np.cos(v))
     fig.add_trace(go.Surface(
-        x=ex, y=ey, z=ez,
+        x=R_EARTH * np.outer(np.cos(u), np.sin(v)),
+        y=R_EARTH * np.outer(np.sin(u), np.sin(v)),
+        z=R_EARTH * np.outer(np.ones_like(u), np.cos(v)),
         colorscale=[[0, '#1a6b3a'], [1, '#2d9e5c']],
-        showscale=False, opacity=0.4, name="Earth",
-        hoverinfo='skip',
+        showscale=False, opacity=0.4, name="Earth", hoverinfo='skip',
     ), row=1, col=1)
 
-    # Position components vs time
-    for name, vals in [("r_x", rx), ("r_y", ry), ("r_z", rz)]:
-        fig.add_trace(go.Scatter(x=t, y=vals, name=name, mode='lines'), row=2, col=1)
+    # COE plots
+    coe_traces = [
+        ("a [m]",   a,  None),
+        ("e [-]",   e,  None),
+        ("i [deg]", i,  [0, 360]),
+        ("Ω [deg]", W,  [0, 360]),
+        ("ω [deg]", w,  [0, 360]),
+        ("ν [deg]", nu, [0, 360]),
+    ]
+    for row, (label, vals, ylim) in enumerate(coe_traces, start=1):
+        fig.add_trace(go.Scatter(x=t, y=vals, name=label, mode='lines', showlegend=False), row=row, col=2)
+        fig.update_yaxes(title_text=label, row=row, col=2, title_standoff=2, range=ylim)
+        if row < n_coe:
+            fig.update_xaxes(showticklabels=False, row=row, col=2)
 
-    # Velocity components vs time
-    for name, i in [("v_x", 0), ("v_y", 1), ("v_z", 2)]:
-        fig.add_trace(go.Scatter(x=t, y=[s.v[i] for s in h], name=name, mode='lines'), row=2, col=2)
-
-    fig.update_xaxes(title_text="Time [s]", row=2, col=1)
-    fig.update_xaxes(title_text="Time [s]", row=2, col=2)
-    fig.update_yaxes(title_text="[m]", row=2, col=1)
-    fig.update_yaxes(title_text="[m/s]", row=2, col=2)
-    fig.update_layout(title="Orbit", height=900)
+    fig.update_xaxes(title_text="Time [s]", row=n_coe, col=2)
+    fig.update_layout(title="Orbit", height=1000)
     return fig
 
 history = propagate()

@@ -1,1 +1,1 @@
-from simwise.forces.j2 import j2_perturbation
+from simwise.forces.j2 import j2
