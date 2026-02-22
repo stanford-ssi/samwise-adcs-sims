@@ -18,11 +18,11 @@ I_body = np.array([[0.01861, 0.00529, 0.0001439],
                    [0.0001439, 0.0000584709, 0.01558]])
 m = 2.0
 
-def run_sim(state, params, tau, F, dt=0.1, tf=100.0):
+def run_sim(state, params, torques=[], perturbations=[], dt=0.1, tf=100.0):
     history = [state]
-    f = lambda s, t, type="combined": state_dot(s, t, params, tau, F, type=type)
+    f = lambda s, t: state_dot(s, params, torques=torques, perturbations=perturbations)
     while state.t < tf:
-        state = rk4(state, dt, f, type="combined")
+        state = rk4(state, dt, f)
         history.append(state)
     return history
 
@@ -39,9 +39,7 @@ class TestAngularMomentumConservation(unittest.TestCase):
             v_eci=np.array([0.0, 7905.0, 0.0]),
             t=0.0,
         )
-        tau = np.zeros(3)
-        F = np.zeros(3)
-        self.history = run_sim(state, params, tau, F)
+        self.history = run_sim(state, params)
         self.I = I_body
 
     def L_mag(self, state):
@@ -66,9 +64,7 @@ class TestOrbitalAngularMomentumConservation(unittest.TestCase):
             v_eci=np.array([0.0, v_circ, 0.0]),
             t=0.0,
         )
-        tau = np.zeros(3)
-        F = np.zeros(3)
-        self.history = run_sim(state, params, tau, F, dt=1.0, tf=5000.0)
+        self.history = run_sim(state, params, dt=1.0, tf=5000.0)
 
     def h_mag(self, state):
         return np.linalg.norm(np.cross(state.r, state.v))
