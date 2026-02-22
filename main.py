@@ -6,55 +6,26 @@ Full attitude propagator using simwise.
 """
 
 import numpy as np
-from tqdm import tqdm
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from simwise.math import Quaternion, rk4
-from simwise.satellite import SatelliteState, SatelliteParams
-from simwise.forces import j2
-from simwise.torques import gravity_gradient
-from simwise.dynamics import state_dot, attitude_dot, orbit_dot
+from simwise import Quaternion, SatelliteState, SatelliteParams, gravity_gradient, j2, date2mjd, propagate
 from simwise.utils.orbital_elements import state2coe
 from simwise.constants import R_EARTH, MU_EARTH
-from simwise.utils.time import date2mjd
 
 I_body = np.array([[0.01861, 0.00529, 0.0001439],
               [0.00529, 0.01833, 0.0000584709],
               [0.0001439, 0.0000584709, 0.01558]])  # [kg m^2]
 m = 2.0 # [kg]
 
-def propagate():
-    params = SatelliteParams(I=I_body, m=m)
-    state = SatelliteState(
-        q_eci2body=Quaternion(0, 0, 0, 1),
-        w_eci=np.array([0.0, 0.0, 0.1]),
-        r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
-        v_eci=np.array([0, 5445.48, 5545.48]),
-        t=0.0,
-        mjd_epoch=date2mjd(2026, 2, 20) # start of simulation
-    )
-    dt = 0.1
-    orbit_every = 100
-    dt_orbit = dt * orbit_every
-    tf = 1.5 * 3600.0 # [s]
-
-    trajectory = []
-    n_steps = int(tf / dt)
-    f_orbit = lambda s, t: orbit_dot(s, params, perturbations=[j2])
-    f_attitude = lambda s, t: attitude_dot(s, params, torques=[gravity_gradient])
-    with tqdm(total=n_steps, desc="Propagating", unit="step") as pbar:
-        step = 0
-        while state.t < tf:
-            trajectory.append(state)
-            if step % orbit_every == 0: # propagate orbit a lot less often than attitude
-                state_orbit = rk4(state, dt_orbit, f_orbit)
-            state = rk4(state, dt, f_attitude)
-            state.r = state_orbit.r
-            state.v = state_orbit.v
-            step += 1
-            pbar.update(1)
-
-    return trajectory
+params = SatelliteParams(I=I_body, m=m)
+state0 = SatelliteState(
+    q_eci2body=Quaternion(0, 0, 0, 1),
+    w_eci=np.array([0.0, 0.0, 0.1]),
+    r_eci=np.array([R_EARTH + 350e3, 0.0, 0.0]),
+    v_eci=np.array([0, 5445.48, 5545.48]),
+    t=0.0,
+    mjd_epoch=date2mjd(2026, 2, 20),
+)
 
 def build_attitude_fig(h):
     t = [s.t for s in h]
@@ -141,6 +112,13 @@ def build_orbit_fig(h):
     fig.update_layout(title="Orbit", height=1000)
     return fig
 
-history = propagate()
+history = propagate(
+    state0, params,
+    torques=[gravity_gradient],
+    perturbations=[j2],
+    dt=0.1,
+    orbit_every=100,
+    tf=1.5 * 3600.0,
+)
 build_attitude_fig(history).show()
 build_orbit_fig(history).show()
