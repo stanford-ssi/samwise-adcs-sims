@@ -79,9 +79,10 @@ def coe2state(state, coe):
     p = a * (1 - e**2)
 
     # 2. position in perifocal frame
+    r_mag = p / (1 + e * np.cos(nu))
     r_pqw = np.array([
-        a * np.cos(nu),
-        a * np.sin(nu),
+        r_mag * np.cos(nu),
+        r_mag * np.sin(nu),
         0
     ])
 
@@ -93,8 +94,8 @@ def coe2state(state, coe):
     ])
 
     # 4. transform to ECI frame
-    r_eci = R1(-W) @ R2(-i) @ R3(-w) @ r_pqw
-    v_eci = R1(-W) @ R2(-i) @ R3(-w) @ v_pqw
+    r_eci = R3(-W) @ R1(-i) @ R3(-w) @ r_pqw
+    v_eci = R3(-W) @ R1(-i) @ R3(-w) @ v_pqw
 
     return SatelliteState(state.q, state.w, r_eci, v_eci, state.t, state.mjd_epoch)
 
