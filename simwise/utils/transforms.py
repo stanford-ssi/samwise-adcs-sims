@@ -22,11 +22,20 @@ def blh2ecef(blh: np.array):
     return np.array([x, y, z])
 
 def ecef2blh(r_ecef):
-    # iteratively solve for B
-    for i in range(10):
+    x, y, z = r_ecef
+    p = np.sqrt(x**2 + y**2)
+    L = np.arctan2(y, x)
+    B = np.arctan2(z, p * (1 - E_WGS84**2))  # spherical initial estimate
+    for _ in range(10):
         N = R_EARTH / np.sqrt(1 - E_WGS84**2 * np.sin(B)**2)
-        B = np.arctan2(r_ecef[2], np.sqrt(r_ecef[0]**2 + r_ecef[1]**2))
-        H = np.linalg.norm(r_ecef) - N
+        B = np.arctan2(z + E_WGS84**2 * N * np.sin(B), p)
+    N = R_EARTH / np.sqrt(1 - E_WGS84**2 * np.sin(B)**2)
+    H = p / np.cos(B) - N if abs(np.cos(B)) > 1e-10 else z / np.sin(B) - N * (1 - E_WGS84**2)
+
+    # ensure proper wrapping
+    L = (L + 2*np.pi) % (2*np.pi)
+    B = (B + np.pi/2) % (np.pi) - np.pi/2
+
     return np.array([B, L, H])
 
 def eci2ecef(r_eci, gmst):

@@ -67,12 +67,12 @@ def state2coe(state):
 
 # Classical orbital elements (COEs) to Cartesian state
 def coe2state(state, coe):
-    a, e, i, W, omega, nu = coe
+    a, e, i, W, w, nu = coe
 
     # convert to radians
     i = np.radians(i)
     W = np.radians(W)
-    omega = np.radians(omega)
+    w = np.radians(w)
     nu = np.radians(nu)
 
     # 1. semi-latus rectum (directly relates to h)
@@ -93,8 +93,8 @@ def coe2state(state, coe):
     ])
 
     # 4. transform to ECI frame
-    r_eci = R1(-W) @ R2(-i) @ R3(-omega) @ r_pqw
-    v_eci = R1(-W) @ R2(-i) @ R3(-omega) @ v_pqw
+    r_eci = R1(-W) @ R2(-i) @ R3(-w) @ r_pqw
+    v_eci = R1(-W) @ R2(-i) @ R3(-w) @ v_pqw
 
     return SatelliteState(state.q, state.w, r_eci, v_eci, state.t, state.mjd_epoch)
 
