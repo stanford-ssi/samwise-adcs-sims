@@ -6,7 +6,7 @@ Ground track simulation using simwise.
 """
 
 import numpy as np
-from simwise import Quaternion, SatelliteState, SatelliteParams, gravity_gradient, j2, date2mjd, coe2state, propagate
+from simwise import Quaternion, SatelliteState, SatelliteParams, Satellite, j2, date2mjd, coe2state, propagate
 from simwise.constants import R_EARTH
 from simwise.utils import build_groundtrack_fig, build_ecef_fig
 
@@ -33,13 +33,15 @@ state0 = SatelliteState(
 )
 state0 = coe2state(state0, [a, e, i, w, W, nu])
 
-history = propagate(
-    state0, params,
+satellite = Satellite(state=state0, params=params)
+
+propagate(
+    satellite,
     torques=[],
     perturbations=[j2],
     dt=5,
     orbit_every=1,
-    tf=86400.0*4, # 4 days
+    tf=86400.0*4,  # 4 days
 )
-build_groundtrack_fig(history).show()
-build_ecef_fig(history).show()
+build_groundtrack_fig(satellite.history).show()
+build_ecef_fig(satellite.history).show()

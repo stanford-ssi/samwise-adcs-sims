@@ -6,22 +6,17 @@ Full attitude propagator using simwise.
 """
 
 import numpy as np
-from simwise import Quaternion, SatelliteState, SatelliteParams, gravity_gradient, j2, date2mjd, propagate
-from simwise.constants import R_EARTH 
+from simwise import Quaternion, SatelliteState, SatelliteParams, Satellite, gravity_gradient, j2, date2mjd, propagate
+from simwise.constants import R_EARTH
 from simwise.utils.plots import build_attitude_fig, build_orbit_fig
 
-""" 
-I_body = np.array([[0.01861, 0.00529, 0.0001439],
-              [0.00529, 0.01833, 0.0000584709],
-              [0.0001439, 0.0000584709, 0.01558]])  # [kg m^2]
-""" 
 I_body = np.array([
     [0.00001,  0.0,    0.0],
     [0.0,      50,     0.0],
     [0.0,      0.0,    50]
 ])
 
-m = 50.0 # [kg]
+m = 50.0  # [kg]
 
 params = SatelliteParams(I=I_body, m=m)
 state0 = SatelliteState(
@@ -33,13 +28,16 @@ state0 = SatelliteState(
     mjd_epoch=date2mjd(2026, 2, 20),
 )
 
-history = propagate(
-    state0, params,
+satellite = Satellite(state=state0, params=params)
+
+propagate(
+    satellite,
     torques=[gravity_gradient],
     perturbations=[j2],
     dt=0.1,
     orbit_every=100,
     tf=1.5 * 3600.0,
 )
-build_attitude_fig(history).show()
-build_orbit_fig(history).show()
+
+build_attitude_fig(satellite.history).show()
+build_orbit_fig(satellite.history).show()
