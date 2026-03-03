@@ -8,7 +8,7 @@ Sun model.
 import numpy as np
 from astropy.coordinates import get_body_barycentric
 from astropy.time import Time
-from simwise.satellite.state import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 from simwise.utils.time import mjd
 
 def sun_vector_eci(state: SatelliteState):

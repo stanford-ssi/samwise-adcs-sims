@@ -7,7 +7,7 @@ Equations of motion for satellite dynamics
 
 import numpy as np
 from simwise.math.quaternion import Quaternion
-from simwise.satellite.state import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 from simwise.constants import MU_EARTH
 
 def q_dot(state):

@@ -6,7 +6,7 @@ Runge-Kutta 4th order integrator
 """
 
 import numpy as np
-from simwise.satellite.state import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 
 def rk4(state: SatelliteState, dt: float, f: callable, sigma_u: float = 0.001) -> SatelliteState:
     k1 = f(state, state.t)

@@ -1,5 +1,5 @@
 from simwise.world.sun import sun_vector_eci
-from simwise.satellite.state import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 from simwise.math.quaternion import Quaternion
 from simwise.utils.time import mjd, date2mjd
 import numpy as np

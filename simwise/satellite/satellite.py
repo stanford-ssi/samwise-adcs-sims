@@ -1,6 +1,6 @@
 import numpy as np
-from simwise.satellite.state import SatelliteState
-from simwise.satellite.params import SatelliteParams
+from simwise.satellite.data_structures.state import SatelliteState
+from simwise.satellite.data_structures.params import SatelliteParams
 from simwise.world.sun import sun_vector_eci
 from simwise.world.b_field import b_earth_dipole
 

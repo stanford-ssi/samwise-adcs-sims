@@ -6,7 +6,7 @@ Orbital elements utilities.
 """
 
 import numpy as np
-from simwise.satellite.state import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 from simwise.math import R1, R2, R3
 from simwise.constants import MU_EARTH
 

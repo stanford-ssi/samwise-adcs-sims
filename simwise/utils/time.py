@@ -6,7 +6,7 @@ Time utilities
 """
 
 import numpy as np
-from simwise.satellite import SatelliteState
+from simwise.satellite.data_structures.state import SatelliteState
 from simwise.constants import DEG2RAD
 
 def mjd(state: SatelliteState):

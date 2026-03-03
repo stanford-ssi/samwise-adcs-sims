@@ -12,7 +12,7 @@ import numpy as np
 class TestOrbitalElements(unittest.TestCase):
     def test_roundtrip_coe2state2coe(self):
         """coe -> state -> coe should recover original elements."""
-        from simwise.satellite.state import SatelliteState
+        from simwise.satellite.data_structures.state import SatelliteState
         from simwise.math.quaternion import Quaternion
 
         state0 = SatelliteState(Quaternion(0, 0, 0, 1), np.zeros(3), np.zeros(3), np.zeros(3))
