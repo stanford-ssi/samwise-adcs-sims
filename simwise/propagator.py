@@ -20,7 +20,9 @@ def propagate(satellite, torques: list[callable], perturbations: list[callable],
         while state.t < tf:
             if step % orbit_every == 0:
                 state_orbit = rk4(state, orbit_every * dt, f_orbit)
+            bias = state.gyro_bias.copy()
             state = rk4(state, dt, f_attitude)
+            state.gyro_bias = bias
             state.r = state_orbit.r
             state.v = state_orbit.v
             state.mjd_epoch = mjd_epoch

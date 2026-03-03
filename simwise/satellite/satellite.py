@@ -2,6 +2,7 @@ import numpy as np
 from simwise.satellite.state import SatelliteState
 from simwise.satellite.params import SatelliteParams
 from simwise.world.sun import sun_vector_eci
+from simwise.world.b_field import b_earth_dipole
 
 
 class Satellite:
@@ -63,8 +64,7 @@ class Satellite:
         return {'sun_body': sun_body}
     
     def _read_magnetometer(self) -> dict:
-        r_eci = self.state.r
-        b_eci = b_field_dipole(r_eci)
+        b_eci = b_earth_dipole(self.state)
         q_eci2body = self.state.q
         b_body = q_eci2body.rot(b_eci)
 
