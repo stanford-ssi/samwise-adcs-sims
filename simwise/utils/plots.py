@@ -1,375 +1,250 @@
+"""
+This file contains plotting functions for history objects!
+
+@ Author: Lundeen Cahilly
+@ Date: 02-22-2026
+"""
+import os
+import base64
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import random
-import numpy as np
+from simwise.constants import R_EARTH, MU_EARTH
+from simwise.utils.orbital_elements import state2coe
 
-from simwise.data_structures.satellite_state import SatelliteState
-from simwise import constants
+_EARTH_IMAGE_PATH = os.path.join(os.path.dirname(__file__), '..', 'assets', 'earth.jpeg')
 
-
-def random_color() -> str:
-    """Returns a random rgb color"""
-    r = random.randint(0, 200)  # Cap at 200 so not too bright
-    g = random.randint(0, 200)
-    b = random.randint(0, 200)
-
-    return "#" + bytes([r, g, b]).hex()
-
-
-def plot_states_plotly(states: list[SatelliteState],
-                       x_getter,
-                       y_getters,
-                       spacing=0.1,
-                       x_label="Time [s]",
-                       y_label="Value",
-                       title_text=""):
-    """
-    Helper function to plot arbitrary quantities from a list of states.
-
-    Arguments:
-        states      List of states
-        x_getter    Getter function to get the xaxis (usually time)
-        y_getters   Dict mapping titles to y getter functions
-    """
-
-    num_plots = len(y_getters)
-    x_values = [x_getter(s) for s in states]
-    titles = list(y_getters.keys())
-
-    fig = make_subplots(rows=num_plots,
-                        cols=1,
-                        subplot_titles=titles,
-                        shared_xaxes=False,
-                        vertical_spacing=spacing)
-
-    colors = [random_color() for i in range(num_plots)]
-
-    for i, series in enumerate(titles):
-        y_getter = y_getters[series]
-        y_values = [y_getter(s) for s in states]
-
-        fig.add_trace(
-            go.Scatter(x=x_values, y=y_values, line=dict(color=colors[i])),
-            row=i+1, col=1
-        )
-        fig.update_yaxes(title_text=y_label, row=i+1, col=1, gridcolor="gray",
-            showgrid=True)
-        fig.update_xaxes(title_text=x_label, row=i+1, col=1, gridcolor="gray",
-            showgrid=True)
-
-    fig.update_layout(
-        title=title_text, 
-        showlegend=False, 
-        height=500 * num_plots,
-        plot_bgcolor="white",  # Background of the plotting area
-        paper_bgcolor="white"  # Background outside the plotting area
-    )
-
-    return fig
-
-def plot_subplots(X, Y, y_axis_titles, x_axis_title, plot_title, save=False):
-    """
-    Plots N subplots with shared X-axis using Plotly graph objects.
-
-    Parameters:
-    Y (numpy.ndarray): A 2D array of shape (N, T) containing the Y data for each subplot.
-    X (numpy.ndarray): A 1D array of length T containing the shared X-axis data.
-    titles (list): A list of titles for each Y-axis (one for each subplot).
-
-    Returns:
-    plotly.graph_objects.Figure: The resulting Plotly figure with subplots.
-    """
-    
-    if len(Y.shape) != 2:
-        Y = Y[..., np.newaxis]
-    T, N = Y.shape
-
-    # Create subplots with shared X-axis
+def build_attitude_fig(h):
+    t = [s.t for s in h]
     fig = make_subplots(
-        rows=N,
-        cols=1,
+        rows=2, cols=1,
+        subplot_titles=("Quaternion Components", "Angular Velocity [rad/s]"),
         shared_xaxes=True,
-        vertical_spacing=0.02,
+        vertical_spacing=0.12,
     )
 
-    # Add traces for each subplot
-    for i in range(N):
-        fig.add_trace(
-            go.Scatter(
-                x=X,
-                y=Y[:, i],
-                mode='lines',
-                name=y_axis_titles[i]
-            ),
-            row=i + 1,
-            col=1
-        )
-        # Set Y-axis title for each subplot
-        fig.update_yaxes(title_text=y_axis_titles[i], row=i + 1, col=1, gridcolor="gray",
-            showgrid=True)
-        
-        fig.update_xaxes(row=i + 1, col=1, gridcolor="gray",
-            showgrid=True)
+    for name, attr in [("q_x", "x"), ("q_y", "y"), ("q_z", "z"), ("q_w", "w")]:
+        fig.add_trace(go.Scatter(x=t, y=[getattr(s.q, attr) for s in h], name=name, mode='lines'), row=1, col=1)
 
-    # Update layout
-    fig.update_layout(
-        height=300 * N,  # Adjust the height accordingly
-        showlegend=True,
-        title=plot_title,
-        plot_bgcolor="white",  # Background of the plotting area
-        paper_bgcolor="white"  # Background outside the plotting area
+    for name, i in [("ω_x", 0), ("ω_y", 1), ("ω_z", 2)]:
+        fig.add_trace(go.Scatter(x=t, y=[s.w[i] for s in h], name=name, mode='lines'), row=2, col=1)
+
+    fig.update_xaxes(title_text="Time [s]", row=2, col=1)
+    fig.update_yaxes(title_text="[-]", row=1, col=1)
+    fig.update_yaxes(title_text="[rad/s]", row=2, col=1)
+    fig.update_layout(title="Attitude", height=700)
+    return fig
+
+def build_orbit_fig(h):
+    t = [s.t for s in h]
+    rx = [s.r[0] for s in h]
+    ry = [s.r[1] for s in h]
+    rz = [s.r[2] for s in h]
+
+    coes = np.array([state2coe(s) for s in h])
+    a, e, i, W, w, nu = (
+        coes[:, 0],
+        coes[:, 1],
+        coes[:, 2],
+        coes[:, 3],
+        coes[:, 4],
+        coes[:, 5],
     )
-    # Set X-axis title only on the bottom subplot
-    fig.update_xaxes(title_text=x_axis_title, row=N, col=1, gridcolor="gray",
-            showgrid=True)
 
-    # Display the figure
-    if save:
-        fig.write_image(plot_title)
-    else:
-        fig.show()
+    n_coe = 6
+    fig = make_subplots(
+        rows=n_coe, cols=2,
+        specs=[[{"type": "scatter3d", "rowspan": n_coe}, {"type": "scatter"}]]
+             + [[None, {"type": "scatter"}]] * (n_coe - 1),
+        column_widths=[0.5, 0.5],
+        vertical_spacing=0.04,
+    )
 
+    # 3-D trajectory
+    fig.add_trace(go.Scatter3d(
+        x=rx, y=ry, z=rz,
+        mode='lines',
+        line=dict(width=4, color='royalblue'),
+        name="trajectory",
+        showlegend=False,
+    ), row=1, col=1)
+
+    # Earth sphere
+    u = np.linspace(0, 2*np.pi, 40)
+    v = np.linspace(0, np.pi, 20)
+    fig.add_trace(go.Surface(
+        x=R_EARTH * np.outer(np.cos(u), np.sin(v)),
+        y=R_EARTH * np.outer(np.sin(u), np.sin(v)),
+        z=R_EARTH * np.outer(np.ones_like(u), np.cos(v)),
+        colorscale=[[0, '#1a6b3a'], [1, '#2d9e5c']],
+        showscale=False, opacity=0.4, name="Earth", hoverinfo='skip',
+    ), row=1, col=1)
+
+    # COE plots
+    coe_traces = [
+        ("a [m]",   a,  None),
+        ("e [-]",   e,  None),
+        ("i [deg]", i,  [0, 360]),
+        ("Ω [deg]", W,  [0, 360]),
+        ("ω [deg]", w,  [0, 360]),
+        ("ν [deg]", nu, [0, 360]),
+    ]
+    for row, (label, vals, ylim) in enumerate(coe_traces, start=1):
+        fig.add_trace(go.Scatter(x=t, y=vals, name=label, mode='lines', showlegend=False), row=row, col=2)
+        fig.update_yaxes(title_text=label, row=row, col=2, title_standoff=2, range=ylim)
+        if row < n_coe:
+            fig.update_xaxes(showticklabels=False, row=row, col=2)
+
+    fig.update_xaxes(title_text="Time [s]", row=n_coe, col=2)
+    fig.update_layout(title="Orbit", height=1000)
     return fig
 
 
-def plot_3D(position_history, title=None, plot_earth=True):
-    # Separate the components into x, y, and z
-    x = position_history[:, 0]
-    y = position_history[:, 1]
-    z = position_history[:, 2]
+def _load_earth_array():
+    from PIL import Image
+    return np.array(Image.open(_EARTH_IMAGE_PATH).resize((720, 360)))
 
-    # Create a 3D scatter plot using Plotly
+
+def _earth_sphere_trace(img_array):
+    """go.Surface of the Earth sphere with texture derived from the image."""
+    gray = (0.299 * img_array[:,:,0] + 0.587 * img_array[:,:,1] + 0.114 * img_array[:,:,2]) / 255.0
+    # Roll so longitude 0° (Prime Meridian) aligns with the ECEF x-axis
+    shift = img_array.shape[1] // 2
+    gray = np.roll(gray, shift, axis=1)
+    img_r = np.roll(img_array, shift, axis=1)
+
+    # Build colorscale: sample actual image RGB at each luminance level
+    flat_gray = gray.flatten()
+    flat_r = img_r[:,:,0].flatten()
+    flat_g = img_r[:,:,1].flatten()
+    flat_b = img_r[:,:,2].flatten()
+    sort_idx = np.argsort(flat_gray)
+    n = 200
+    positions = np.linspace(0, len(sort_idx) - 1, n, dtype=int)
+    colorscale = []
+    for i, pos in enumerate(positions):
+        idx = sort_idx[pos]
+        colorscale.append([i / (n - 1), f'rgb({flat_r[idx]},{flat_g[idx]},{flat_b[idx]})'])
+
+    N_lat, N_lon = gray.shape
+    phi   = np.linspace(0, np.pi, N_lat)
+    theta = np.linspace(0, 2 * np.pi, N_lon)
+    return go.Surface(
+        x=R_EARTH * np.outer(np.sin(phi), np.cos(theta)),
+        y=R_EARTH * np.outer(np.sin(phi), np.sin(theta)),
+        z=R_EARTH * np.outer(np.cos(phi), np.ones(N_lon)),
+        surfacecolor=gray,
+        colorscale=colorscale,
+        showscale=False, opacity=1.0,
+        name="Earth", hoverinfo='skip',
+        cmin=0.0, cmax=1.0,
+    )
+
+
+def build_groundtrack_fig(h):
+    from simwise.utils.transforms import eci2ecef, ecef2blh
+    from simwise.utils.time import gmst as compute_gmst
+
+    lats, lons = [], []
+    for s in h:
+        r_ecef = eci2ecef(s.r, compute_gmst(s))
+        blh = ecef2blh(r_ecef)
+        lats.append(np.degrees(blh[0]))
+        lons.append(np.degrees(blh[1]))
+    
+    # wrap longitudes to -180 to 180 degrees
+    for i in range(len(lons)):
+        lons[i] = (lons[i] + 180) % 360 - 180
+
+    # Break line at antimeridian crossings to avoid horizontal wrap lines
+    lons_plot, lats_plot = [lons[0]], [lats[0]]
+    for i in range(1, len(lons)):
+        if abs(lons[i] - lons[i - 1]) > 180:
+            lons_plot.append(None)
+            lats_plot.append(None)
+        lons_plot.append(lons[i])
+        lats_plot.append(lats[i])
+
+    with open(_EARTH_IMAGE_PATH, 'rb') as f:
+        earth_b64 = base64.b64encode(f.read()).decode()
+
     fig = go.Figure()
-
-    fig.add_trace(go.Scatter3d(
-        x=x,
-        y=y,
-        z=z,
-        mode='markers+lines',  # Combines scatter points and lines
-        marker=dict(
-            size=0.001,
-            color='red',  # Optional: Color points based on the z value
-            opacity=0.8
-        ),
-        line=dict(
-            color='red',
-            width=3
-        )
+    fig.add_layout_image(dict(
+        source=f"data:image/jpeg;base64,{earth_b64}",
+        xref="x", yref="y",
+        x=-180, y=90,
+        sizex=360, sizey=180,
+        sizing="stretch",
+        opacity=1.0,
+        layer="below",
+    ))
+    fig.add_trace(go.Scatter(
+        x=lons_plot, y=lats_plot,
+        mode='lines',
+        line=dict(color='yellow', width=1),
+        name="ground track",
     ))
 
-    # Create a sphere to represent Earth
-    if plot_earth:
-        earth_radius = constants.EARTH_RADIUS_M
-        u, v = np.mgrid[0:2 * np.pi:50j, 0:np.pi:25j]
-        sphere_x = earth_radius * np.cos(u) * np.sin(v)
-        sphere_y = earth_radius * np.sin(u) * np.sin(v)
-        sphere_z = earth_radius * np.cos(v)
+    fig.add_trace(go.Scatter(
+        x=[lons[0]], y=[lats[0]],
+        mode='markers',
+        marker=dict(size=12, color='lime', symbol='circle',
+                    line=dict(color='white', width=2)),
+        name="start",
+    ))
+    fig.add_trace(go.Scatter(
+        x=[lons[-1]], y=[lats[-1]],
+        mode='markers',
+        marker=dict(size=12, color='red', symbol='circle',
+                    line=dict(color='white', width=2)),
+        name="end",
+    ))
+    fig.update_xaxes(range=[-180, 180], title_text="Longitude [deg]",
+                     showgrid=True, gridcolor='rgba(255,255,255,0.3)', dtick=30)
+    fig.update_yaxes(range=[-90, 90], title_text="Latitude [deg]",
+                     showgrid=True, gridcolor='rgba(255,255,255,0.3)', dtick=30)
+    fig.update_layout(title="Ground Track", height=700,
+                      plot_bgcolor='black', paper_bgcolor='#111',
+                      font=dict(color='white'))
+    return fig
 
-        # Add the sphere to the plot
-        fig.add_trace(go.Surface(
-            x=sphere_x,
-            y=sphere_y,
-            z=sphere_z,
-            colorscale=[[0, 'lightblue'], [1, 'lightblue']],
-            opacity=0.5,
-            showscale=False
-        ))
 
-    # Add labels and a title
-    if title is None:
-        title = "3D Visualization of Output"
-    fig.update_layout(
-        scene=dict(
-        xaxis=dict(
-            backgroundcolor="white",
-            title="X (m)",  # Set the x-axis title
-            gridcolor="gray",  # Set grid color to gray
-            showgrid=True      # Ensure the grid is visible
-        ),
-        yaxis=dict(
-            backgroundcolor="white",
-            title="Y (m)",  # Set the y-axis title
-            gridcolor="gray",
-            showgrid=True
-        ),
-        zaxis=dict(
-            backgroundcolor="white",
-            title="Z (m)",  # Set the z-axis title
-            gridcolor="gray",
-            showgrid=True
-        )
-    ),
-        title=title,
-        margin=dict(l=0, r=0, b=0, t=40),  # Tight layout
-        plot_bgcolor="white",  # Background of the plotting area
-        paper_bgcolor="white"  # Background outside the plotting area
-    )
+def build_ecef_fig(h):
+    from simwise.utils.transforms import eci2ecef
+    from simwise.utils.time import gmst as compute_gmst
 
-    # Show the plot
-    fig.show()
+    rx, ry, rz = [], [], []
+    for s in h:
+        r_ecef = eci2ecef(s.r, compute_gmst(s))
+        rx.append(r_ecef[0])
+        ry.append(r_ecef[1])
+        rz.append(r_ecef[2])
 
-def plot_results(states_from_dispersions):
-    # Create subplots
-    fig = make_subplots(
-        rows=7, cols=2,
-        shared_xaxes=True,
-        vertical_spacing=0.08,
-        horizontal_spacing=0.2,  # Increase spacing between columns
-        subplot_titles=(
-            "Semi-major axis", "q_0", 
-            "Eccentricity", "q_1",
-            "Inclination", "q_2",
-            "RAAN", "q_3",
-            "Argument of Periapsis", "ω_x",
-            "True Anomaly", "ω_y",
-            "", "ω_z"
-        ),
-    )
+    img_array = _load_earth_array()
 
-    for run_index, states in enumerate(states_from_dispersions, start=1):
-        # Generate a random color for this set of states
-        random_color = f"rgb({random.randint(0, 200)}, {random.randint(0, 200)}, {random.randint(0, 200)})"
+    fig = go.Figure()
+    fig.add_trace(_earth_sphere_trace(img_array))
+    fig.add_trace(go.Scatter3d(
+        x=rx, y=ry, z=rz,
+        mode='lines',
+        line=dict(width=4, color='yellow'),
+        name="trajectory",
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[rx[0]], y=[ry[0]], z=[rz[0]],
+        mode='markers',
+        marker=dict(size=8, color='lime',
+                    line=dict(color='white', width=2)),
+        name="start",
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[rx[-1]], y=[ry[-1]], z=[rz[-1]],
+        mode='markers',
+        marker=dict(size=8, color='red',
+                    line=dict(color='white', width=2)),
+        name="end",
+    ))
+    fig.update_layout(title="ECEF Position", height=700,
+                      scene=dict(aspectmode='data'))
+    return fig
 
-        # Add a dummy trace to the legend for this run
-        fig.add_trace(
-            go.Scatter(
-                x=[None], y=[None],  # Dummy trace
-                mode="markers",
-                marker=dict(color=random_color, size=10),
-                name=f"Run {run_index}",
-                legendgroup=f"run_{run_index}",  # Group traces under the same legend entry
-                showlegend=True  # Show this trace in the legend
-            )
-        )
-
-        times = [state.t for state in states]  # Extract times from states
-
-        # Orbit parameters
-        orbit_params = [
-            ("a (km)", lambda s: s.orbit_keplerian[0] / 1000),
-            ("e", lambda s: s.orbit_keplerian[1]),
-            ("i (deg)", lambda s: np.degrees(s.orbit_keplerian[2])),
-            ("Ω (deg)", lambda s: np.degrees(s.orbit_keplerian[3])),
-            ("ω (deg)", lambda s: np.degrees(s.orbit_keplerian[4])),
-            ("θ (deg)", lambda s: np.degrees(s.orbit_keplerian[5]))
-        ]
-        orbit_buffer_list = [0.1, 0.00001, 0.0001, 0.0001, 0.0001, 0.0001]
-
-        for i, (name, func) in enumerate(orbit_params):
-            values = [func(state) for state in states]
-
-            # Calculate y-axis range
-            y_min = min(values)
-            y_max = max(values)
-            buffer = orbit_buffer_list[i % len(orbit_buffer_list)] if orbit_buffer_list else 0
-            y_range = [y_min - buffer, y_max + buffer]
-
-            fig.add_trace(
-                go.Scatter(
-                    x=times, y=values, name=name,
-                    line=dict(color=random_color),
-                    legendgroup=f"run_{run_index}",  # Group traces under the same legend entry
-                    showlegend=False  # Only the dummy trace shows in the legend
-                ),
-                row=i+1, col=1
-            )
-            fig.update_yaxes(title_text=name, row=i+1, col=1, range=y_range)
-
-        # Attitude parameters
-        attitude_params = [
-            ("q0", lambda s: s.q[0]),
-            ("q1", lambda s: s.q[1]),
-            ("q2", lambda s: s.q[2]),
-            ("q3", lambda s: s.q[3]),
-            ("wx (rad/s)", lambda s: s.w[0]),
-            ("wy (rad/s)", lambda s: s.w[1]),
-            ("wz (rad/s)", lambda s: s.w[2])
-        ]
-
-        for i, (name, func) in enumerate(attitude_params):
-            values = [func(state) for state in states]
-            fig.add_trace(
-                go.Scatter(
-                    x=times, y=values, name=name,
-                    line=dict(color=random_color),
-                    legendgroup=f"run_{run_index}",  # Group traces under the same legend entry
-                    showlegend=False  # Only the dummy trace shows in the legend
-                ),
-                row=i+1, col=2
-            )
-            fig.update_yaxes(title_text=name, row=i+1, col=2)
-        
-        attitude_params = [
-            ("q0_d", lambda s: s.q_d[0]),
-            ("q1_d", lambda s: s.q_d[1]),
-            ("q2_d", lambda s: s.q_d[2]),
-            ("q3_d", lambda s: s.q_d[3]),
-            ("wx_d (rad/s)", lambda s: s.w_d[0]),
-            ("wy_d (rad/s)", lambda s: s.w_d[1]),
-            ("wz_d (rad/s)", lambda s: s.w_d[2])
-        ]
-
-        for i, (name, func) in enumerate(attitude_params):
-            values = [func(state) for state in states]
-            fig.add_trace(
-                go.Scatter(
-                    x=times, y=values, name=name,
-                    line=dict(color=random_color),
-                    legendgroup=f"run_{run_index}",  # Group traces under the same legend entry
-                    showlegend=False  # Only the dummy trace shows in the legend
-                ),
-                row=i+1, col=2
-            )
-            fig.update_yaxes(title_text=name, row=i+1, col=2)
-
-    # Update layout
-    fig.update_layout(
-        height=None,  # Automatically adjusts to the content
-        width=None,   # Automatically adjusts to the content
-        autosize=True,
-        title_text="Integrated Orbit and Attitude Simulation",
-        title_x=0.5,
-        title_y=0.99,
-        title_xanchor='center',
-        title_yanchor='top',
-        legend=dict(
-            x=1.1,  # Position the legend just outside the plotting area
-            y=1.0,
-            xanchor="left",
-            yanchor="top",
-            title="Run Legend",
-            font=dict(size=12),
-            bordercolor="black",
-            borderwidth=1
-        ),
-        margin=dict(r=200),  # Adjust right margin to accommodate the legend
-        plot_bgcolor="white",  # Background of the plotting area
-        paper_bgcolor="white"  # Background outside the plotting area
-    )
-    fig.update_xaxes(gridcolor="lightgray")
-    fig.update_yaxes()
-
-    # Add column titles
-    fig.add_annotation(
-        x=0.25, y=1.05, xref="paper", yref="paper",
-        text="Orbit Parameters", showarrow=False, font=dict(size=16)
-    )
-    fig.add_annotation(
-        x=0.75, y=1.05, xref="paper", yref="paper",
-        text="Attitude Parameters", showarrow=False, font=dict(size=16)
-    )
-
-    # Update x-axes to show time
-    for i in range(7):
-        fig.update_xaxes(title_text="Time (s)", row=i+1, col=1, showticklabels=True, gridcolor="lightgray")
-        fig.update_xaxes(title_text="Time (s)", row=i+1, col=2, showticklabels=True, gridcolor="lightgray")
-        fig.update_yaxes(gridcolor="lightgray", row=i+1, col=1)
-        fig.update_yaxes(gridcolor="lightgray", row=i+1, col=2)
-
-    # Adjust subplot titles
-    for i, ann in enumerate(fig['layout']['annotations']):
-        ann['font'] = dict(size=12)
-        if i >= 14:  # Adjusting the position of column titles
-            ann['y'] = 1.06
-
-    fig.show()
